@@ -1,6 +1,7 @@
 #include <xd/audio/sound.hpp>
 #include <xd/audio/exceptions.hpp>
 #include <SFML/Audio.hpp>
+#include <memory>
 
 namespace xd { namespace detail {
 	

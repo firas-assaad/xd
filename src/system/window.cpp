@@ -204,7 +204,7 @@ void xd::window::register_tick_handler(tick_callback_t callback, boost::uint32_t
 
 void xd::window::unregister_tick_handler()
 {
-	m_tick_handler = 0;
+	m_tick_handler = nullptr;
 }
 
 int xd::window::fps() const
