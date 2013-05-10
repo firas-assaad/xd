@@ -44,6 +44,81 @@ void xd::sprite_batch::clear()
 	m_data->sprites.clear();
 }
 
+xd::sprite_batch::batch_list xd::sprite_batch::create_batches()
+{
+	std::vector<xd::vertex_batch<xd::detail::sprite_vertex_traits>::ptr> batches;
+
+	// create a quad for rendering sprites
+	xd::detail::sprite_vertex quad[4];
+
+	// iterate through all sprites
+	for (auto i = m_data->sprites.begin(); i != m_data->sprites.end(); ++i) {
+		// create a vertex batch for sending vertex data
+		xd::vertex_batch<xd::detail::sprite_vertex_traits>::ptr batch(new xd::vertex_batch<xd::detail::sprite_vertex_traits>(GL_QUADS));
+		// so we need to type less ;)
+		auto tw = i->texture->width();
+		auto th = i->texture->height();
+		auto& src = i->src;
+		auto& origin = i->origin;
+
+		// calculate scale
+		vec2 scale = m_scale * i->scale;
+
+		// assign position
+		quad[0].pos = vec2(scale.x*(0-origin.x)*src.w, scale.y*(1-origin.y)*src.h);
+		quad[1].pos = vec2(scale.x*(1-origin.x)*src.w, scale.y*(1-origin.y)*src.h);
+		quad[2].pos = vec2(scale.x*(1-origin.x)*src.w, scale.y*(0-origin.y)*src.h);
+		quad[3].pos = vec2(scale.x*(0-origin.x)*src.w, scale.y*(0-origin.y)*src.h);
+
+		// if there's rotation
+		if (i->rotation) {
+			// construct a rotation matrix
+			auto rotation_matrix = rotate(mat4(), i->rotation, vec3(0, 0, 1));
+			// rotate the 4 vertices
+			quad[0].pos = vec2(rotation_matrix * vec4(quad[0].pos, 0, 1));
+			quad[1].pos = vec2(rotation_matrix * vec4(quad[1].pos, 0, 1));
+			quad[2].pos = vec2(rotation_matrix * vec4(quad[2].pos, 0, 1));
+			quad[3].pos = vec2(rotation_matrix * vec4(quad[3].pos, 0, 1));
+		}
+
+		// assign texture pos
+		quad[0].texpos = vec2(src.x/tw        , (src.y+src.h)/th);
+		quad[1].texpos = vec2((src.x+src.w)/tw, (src.y+src.h)/th);
+		quad[2].texpos = vec2((src.x+src.w)/tw, src.y/th);
+		quad[3].texpos = vec2(src.x/tw        , src.y/th);
+
+		// load the quad
+		batch->load(&quad[0], 4);
+		batches.push_back(batch);
+
+	}
+	
+	return batches;
+}
+
+void xd::sprite_batch::draw(const xd::mat4& mvp_matrix, const xd::sprite_batch::batch_list& batches)
+{
+	assert(m_data->sprites.size() == batches.size());
+	// setup the shader
+	m_data->shader.use();
+	m_data->shader.bind_uniform("mvpMatrix", mvp_matrix);
+
+	// iterate through all sprites
+	for (unsigned int i = 0; i < m_data->sprites.size(); ++i) {
+		auto& sprite = m_data->sprites[i];
+		auto& batch = batches[i];
+		// give required params to shader
+		m_data->shader.bind_uniform("vPosition", vec4(sprite.x, sprite.y, sprite.depth, 0));
+		m_data->shader.bind_uniform("vColor", sprite.color);
+
+		// bind the texture
+		sprite.texture->bind(GL_TEXTURE0);
+		
+		// draw it
+		batch->render();
+	}
+}
+
 void xd::sprite_batch::draw(const xd::mat4& mvp_matrix)
 {
 	// create a vertex batch for sending vertex data

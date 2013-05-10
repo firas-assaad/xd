@@ -2,6 +2,7 @@
 #define H_XD_GRAPHICS_SPRITE_BATCH
 
 #include <xd/graphics/detail/sprite_batch.hpp>
+#include <xd/graphics/vertex_batch.hpp>
 #include <xd/ref_counted.hpp>
 #include <xd/graphics/transform_geometry.hpp>
 #include <xd/graphics/texture.hpp>
@@ -24,6 +25,9 @@ namespace xd
 		virtual ~sprite_batch();
 
 		void clear();
+		typedef std::vector<xd::vertex_batch<detail::sprite_vertex_traits>::ptr> batch_list;
+		batch_list create_batches();
+		void draw(const xd::mat4& mvp_matrix, const batch_list& batches);
 		void draw(const mat4& matrix);
 		
 		void set_scale(float scale);
