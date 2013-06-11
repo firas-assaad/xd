@@ -41,7 +41,7 @@ xd::lua::function<void> xd::lua::virtual_machine::load(const std::string& code)
 	if (status != 0) {
 		std::string error_message = lua_tostring(m_lua_state, -1);
 		lua_pop(m_lua_state, 1);
-		throw new script_load_failed(error_message);
+		throw script_load_failed(error_message);
 	}
 
 	// create a luabind object from the function in stack
