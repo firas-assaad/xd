@@ -278,7 +278,7 @@ bool xd::window::pressed(const std::string& key, int modifiers) const
 	xd::window::virtual_table_t::const_iterator i = m_virtual_to_key.find(key);
 	if (i != m_virtual_to_key.end()) {
 		// iterate through each physical key
-		for (xd::window::key_set_t::iterator j = i->second.begin(); j != i->second.end(); ++j) {
+		for (xd::window::key_set_t::const_iterator j = i->second.begin(); j != i->second.end(); ++j) {
 			if (pressed(*j, modifiers))
 					return true;
 		}
@@ -300,7 +300,7 @@ bool xd::window::triggered(const std::string& key, int modifiers) const
 	xd::window::virtual_table_t::const_iterator i = m_virtual_to_key.find(key);
 	if (i != m_virtual_to_key.end()) {
 		// iterate through each physical key
-		for (xd::window::key_set_t::iterator j = i->second.begin(); j != i->second.end(); ++j) {
+		for (xd::window::key_set_t::const_iterator j = i->second.begin(); j != i->second.end(); ++j) {
 			if (triggered(*j, modifiers))
 				return true;
 		}

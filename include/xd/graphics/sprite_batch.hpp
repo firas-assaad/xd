@@ -1,6 +1,7 @@
 #ifndef H_XD_GRAPHICS_SPRITE_BATCH
 #define H_XD_GRAPHICS_SPRITE_BATCH
 
+#include <vector>
 #include <xd/graphics/detail/sprite_batch.hpp>
 #include <xd/graphics/vertex_batch.hpp>
 #include <xd/ref_counted.hpp>

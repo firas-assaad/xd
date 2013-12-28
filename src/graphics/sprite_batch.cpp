@@ -10,7 +10,7 @@ namespace xd { namespace detail {
 
 	struct sprite
 	{
-		texture::ptr texture;
+		texture::ptr tex;
 		rect src;
 		float x, y;
 		float rotation;
@@ -56,8 +56,8 @@ xd::sprite_batch::batch_list xd::sprite_batch::create_batches()
 		// create a vertex batch for sending vertex data
 		xd::vertex_batch<xd::detail::sprite_vertex_traits>::ptr batch(new xd::vertex_batch<xd::detail::sprite_vertex_traits>(GL_QUADS));
 		// so we need to type less ;)
-		auto tw = i->texture->width();
-		auto th = i->texture->height();
+		auto tw = i->tex->width();
+		auto th = i->tex->height();
 		auto& src = i->src;
 		auto& origin = i->origin;
 
@@ -112,7 +112,7 @@ void xd::sprite_batch::draw(const xd::mat4& mvp_matrix, const xd::sprite_batch::
 		m_data->shader.bind_uniform("vColor", sprite.color);
 
 		// bind the texture
-		sprite.texture->bind(GL_TEXTURE0);
+		sprite.tex->bind(GL_TEXTURE0);
 		
 		// draw it
 		batch->render();
@@ -134,8 +134,8 @@ void xd::sprite_batch::draw(const xd::mat4& mvp_matrix)
 	// iterate through all sprites
 	for (auto i = m_data->sprites.begin(); i != m_data->sprites.end(); ++i) {
 		// so we need to type less ;)
-		auto tw = i->texture->width();
-		auto th = i->texture->height();
+		auto tw = i->tex->width();
+		auto th = i->tex->height();
 		auto& src = i->src;
 		auto& origin = i->origin;
 
@@ -173,7 +173,7 @@ void xd::sprite_batch::draw(const xd::mat4& mvp_matrix)
 		m_data->shader.bind_uniform("vColor", i->color);
 
 		// bind the texture
-		i->texture->bind(GL_TEXTURE0);
+		i->tex->bind(GL_TEXTURE0);
 		
 		// draw it
 		batch.render();
@@ -218,7 +218,7 @@ void xd::sprite_batch::add(const xd::texture::ptr texture, const xd::rect& src, 
 void xd::sprite_batch::add(const xd::texture::ptr texture, const xd::rect& src, float x, float y, float rotation, const xd::vec2& scale, const xd::vec4& color, const xd::vec2& origin)
 {
 	detail::sprite sprite;
-	sprite.texture = texture;
+	sprite.tex = texture;
 	sprite.src = src;
 	sprite.x = x;
 	sprite.y = y;

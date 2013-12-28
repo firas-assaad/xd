@@ -46,10 +46,9 @@ namespace xd
 			bind_vertex_attribute(index, detail::vertex_attribute_type<R>::value, detail::vertex_attribute_size<R>::value,
 				reinterpret_cast<const GLvoid*>(&(static_cast<T*>(nullptr)->*ptr)), normalized, vertex_size);
 		}
-	
+        std::unordered_map<GLuint, detail::vertex_attribute> m_attribs;
 	private:
 		template <typename> friend class vertex_batch;
-		std::unordered_map<GLuint, detail::vertex_attribute> m_attribs;
 	};
 }
 

@@ -1,6 +1,7 @@
 #ifndef H_XD_LUA_TYPES
 #define H_XD_LUA_TYPES
 
+#include <xd/types.hpp>
 #include <xd/lua/config.hpp>
 #include <xd/lua/function.hpp>
 #include <lua.hpp>
