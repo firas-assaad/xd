@@ -62,6 +62,8 @@ namespace xd
 
 		bool modifier(int modifiers) const;
 
+		bool joystick_present(int id) const;
+
 		event_link bind_input_event(const std::string& event_name, input_event_callback_t callback,
 			const input_filter& filter = input_filter(), event_placement place = EVENT_PREPEND);
 		void unbind_input_event(const std::string& event_name, event_link link);
@@ -107,6 +109,13 @@ namespace xd
 		// key triggers
 		trigger_keys_t m_triggered_keys;
 		trigger_keys_t m_tick_handler_triggered_keys;
+
+		struct {
+			float axes_values[5];
+			unsigned char buttons[16];
+			unsigned char prev_buttons[16];
+		} joystick_state;
+
 
 		// to keep track whether we're in update or not
 		bool m_in_update;

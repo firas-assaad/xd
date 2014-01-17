@@ -61,6 +61,24 @@ namespace xd
 	const key MOUSE_7 = MOUSE(GLFW_MOUSE_BUTTON_7);
 	const key MOUSE_8 = MOUSE(GLFW_MOUSE_BUTTON_8);
 
+	// pre-defined joystick keys
+	const key JOYSTICK_BUTTON_1 = JOYSTICK(0);
+	const key JOYSTICK_BUTTON_2 = JOYSTICK(1);
+	const key JOYSTICK_BUTTON_3 = JOYSTICK(2);
+	const key JOYSTICK_BUTTON_4 = JOYSTICK(3);
+	const key JOYSTICK_BUTTON_5 = JOYSTICK(4);
+	const key JOYSTICK_BUTTON_6 = JOYSTICK(5);
+	const key JOYSTICK_BUTTON_7 = JOYSTICK(6);
+	const key JOYSTICK_BUTTON_8 = JOYSTICK(7);
+	const key JOYSTICK_BUTTON_9 = JOYSTICK(8);
+	const key JOYSTICK_BUTTON_10 = JOYSTICK(9);
+	const key JOYSTICK_BUTTON_11 = JOYSTICK(10);
+	const key JOYSTICK_BUTTON_12 = JOYSTICK(11);
+	const key JOYSTICK_AXIS_LEFT = JOYSTICK(12);
+	const key JOYSTICK_AXIS_RIGHT = JOYSTICK(13);
+	const key JOYSTICK_AXIS_UP = JOYSTICK(14);
+	const key JOYSTICK_AXIS_DOWN = JOYSTICK(15);
+
 	// modifiers
 	/*const int mod_none = 0;
 	const int mod_lshift = GLFW_KEY_LSHIFT;

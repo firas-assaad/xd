@@ -78,6 +78,10 @@ xd::window::window(const std::string& title, int width, int height, const window
 	glfwSetKeyCallback(&on_key_proxy);
 	glfwSetMouseButtonCallback(&on_mouse_proxy);
 
+	for(int button = 0; button < 14; button++) {
+		joystick_state.buttons[button] = GLFW_RELEASE;
+	}
+
 	window_instance = this;
 }
 
@@ -94,6 +98,8 @@ void xd::window::on_input(input_type type, int key, int action)
 	input_args args;
 	if (type == INPUT_KEYBOARD)
 		args.physical_key = KEY(key);
+	else if (type == INPUT_JOYSTICK)
+		args.physical_key = JOYSTICK(key);
 	else
 		args.physical_key = MOUSE(key);
 	args.modifiers = 0;
@@ -116,6 +122,31 @@ void xd::window::on_input(input_type type, int key, int action)
 
 void xd::window::update()
 {
+	// Update joystick values
+	glfwGetJoystickButtons(0, joystick_state.buttons, 12);
+	glfwGetJoystickPos(0, joystick_state.axes_values, 5);
+
+	for(int axis = 0; axis < 5; axis++) {
+			if(joystick_state.axes_values[axis] < 0.5f && joystick_state.axes_values[axis] > -0.5f)
+				joystick_state.axes_values[axis] = 0.0f;
+	}
+	for (int button = 12; button < 16; button++) {
+		joystick_state.buttons[button] = GLFW_RELEASE;
+	}
+	if (joystick_state.axes_values[0] > 0.0f)
+		joystick_state.buttons[JOYSTICK_AXIS_RIGHT.code] = GLFW_PRESS;
+	else if (joystick_state.axes_values[0] < 0.0f)
+		joystick_state.buttons[JOYSTICK_AXIS_LEFT.code] = GLFW_PRESS;
+	if (joystick_state.axes_values[1] > 0.0f)
+		joystick_state.buttons[JOYSTICK_AXIS_UP.code] = GLFW_PRESS;
+	else if (joystick_state.axes_values[1] < 0.0f)
+		joystick_state.buttons[JOYSTICK_AXIS_DOWN.code] = GLFW_PRESS;
+
+	for (int button = 0; button < 12; button++) {
+		if (joystick_state.buttons[button] != joystick_state.prev_buttons[button])
+			on_input(INPUT_JOYSTICK, button, joystick_state.buttons[button]);
+	}
+	glfwGetJoystickButtons(0, joystick_state.prev_buttons, 12);
 	// this is used to keep track which triggered keys list triggered() uses
 	m_in_update = true;
 
@@ -269,6 +300,10 @@ bool xd::window::pressed(const xd::key& key, int modifiers) const
 		/*if ((SDL_GetMouseState(0, 0) & SDL_BUTTON(key.code)) != 0 && modifier(modifiers))
 			return true;*/
 	}
+	if (key.type == xd::INPUT_JOYSTICK) {
+		if (joystick_state.buttons[key.code])
+			return true;
+	}
 	return false;
 }
 
@@ -312,6 +347,11 @@ bool xd::window::modifier(int modifiers) const
 {
 	//return ((modifiers & SDL_GetModState()) == modifiers);
 	return (modifiers == 0);
+}
+
+bool xd::window::joystick_present(int id) const
+{
+	return glfwGetJoystickParam(id, GLFW_PRESENT) == 1;
 }
 
 xd::event_link xd::window::bind_input_event(const std::string& event_name, input_event_callback_t callback,

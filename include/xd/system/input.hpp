@@ -12,7 +12,8 @@ namespace xd
 	enum input_type
 	{
 		INPUT_KEYBOARD,
-		INPUT_MOUSE
+		INPUT_MOUSE,
+		INPUT_JOYSTICK
 	};
 
 	struct key
@@ -90,6 +91,15 @@ namespace xd
 		return k;
 	}
 
+	// utility function to create joystick
+	inline key JOYSTICK(int code)
+	{
+		key k;
+		k.type = INPUT_JOYSTICK;
+		k.code = code;
+		return k;
+	}
+
 	// pre-defined keyboard keys
 	extern XD_API const key KEY_LEFT;
 	extern XD_API const key KEY_RIGHT;
@@ -147,6 +157,24 @@ namespace xd
 	extern XD_API const key MOUSE_6;
 	extern XD_API const key MOUSE_7;
 	extern XD_API const key MOUSE_8;
+
+	// pre-defined joystick keys
+	extern XD_API const key JOYSTICK_BUTTON_1;
+	extern XD_API const key JOYSTICK_BUTTON_2;
+	extern XD_API const key JOYSTICK_BUTTON_3;
+	extern XD_API const key JOYSTICK_BUTTON_4;
+	extern XD_API const key JOYSTICK_BUTTON_5;
+	extern XD_API const key JOYSTICK_BUTTON_6;
+	extern XD_API const key JOYSTICK_BUTTON_7;
+	extern XD_API const key JOYSTICK_BUTTON_8;
+	extern XD_API const key JOYSTICK_BUTTON_9;
+	extern XD_API const key JOYSTICK_BUTTON_10;
+	extern XD_API const key JOYSTICK_BUTTON_11;
+	extern XD_API const key JOYSTICK_BUTTON_12;
+	extern XD_API const key JOYSTICK_AXIS_LEFT;
+	extern XD_API const key JOYSTICK_AXIS_RIGHT;
+	extern XD_API const key JOYSTICK_AXIS_UP;
+	extern XD_API const key JOYSTICK_AXIS_DOWN;
 
 	// modifiers
 	/*extern XD_API const int mod_none;
