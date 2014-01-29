@@ -142,11 +142,14 @@ void xd::window::update()
 	else if (joystick_state.axes_values[1] < 0.0f)
 		joystick_state.buttons[JOYSTICK_AXIS_DOWN.code] = GLFW_PRESS;
 
-	for (int button = 0; button < 12; button++) {
+	for (int button = 0; button < 16; button++) {
 		if (joystick_state.buttons[button] != joystick_state.prev_buttons[button])
 			on_input(INPUT_JOYSTICK, button, joystick_state.buttons[button]);
 	}
 	glfwGetJoystickButtons(0, joystick_state.prev_buttons, 12);
+	for (int button = 12; button < 16; button++) {
+		joystick_state.prev_buttons[button] = joystick_state.buttons[button];
+	}
 	// this is used to keep track which triggered keys list triggered() uses
 	m_in_update = true;
 
