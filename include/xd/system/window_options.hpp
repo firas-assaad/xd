@@ -17,7 +17,7 @@ namespace xd
 		{}
 
 		window_options(bool fullscreen, bool allow_resize, bool display_cursor, int depth_bits,
-			int antialiasing_level, int major_version, int minor_version)
+			int stencil_bits, int antialiasing_level, int major_version, int minor_version)
 			: fullscreen(fullscreen)
 			, allow_resize(allow_resize)
 			, display_cursor(display_cursor)
