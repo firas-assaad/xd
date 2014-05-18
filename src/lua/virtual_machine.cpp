@@ -317,7 +317,7 @@ void xd::lua::virtual_machine::load_library(const std::string& module_name)
 	];
 
 	// get the xd namespace table
-	object xd_table = globals()["xd"];
+	object xd_table = globals()[module_name];
 
 	// bind constants
 	xd_table["INPUT_KEYBOARD"] = INPUT_KEYBOARD;
