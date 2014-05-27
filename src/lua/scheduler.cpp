@@ -36,15 +36,18 @@ xd::lua::scheduler::scheduler(virtual_machine& vm)
 	: m_vm(vm)
 	, m_current_thread(0)
 {
-	// register scheduler_task_result
-	luabind::module(vm.lua_state())
-	[
-		// it's just an internal class; don't give it a name
-		luabind::class_<scheduler_task_result>("")
-			.def("set_value", &scheduler_task_result::set_value<luabind::object>)
-			.def("get_value", &detail::scheduler_task_result_get_value)
-			.def("has_value", &scheduler_task_result::has_value)
-	];
+	if (!vm.globals()["scheduler_task_result_registered"]) {
+		// register scheduler_task_result
+		luabind::module(vm.lua_state())
+		[
+			// it's just an internal class; don't give it a name
+			luabind::class_<scheduler_task_result>("")
+				.def("set_value", &scheduler_task_result::set_value<luabind::object>)
+				.def("get_value", &detail::scheduler_task_result_get_value)
+				.def("has_value", &scheduler_task_result::has_value)
+		];
+		vm.globals()["scheduler_task_result_registered"] = 1;
+	}
 
 	m_tasks = new detail::scheduler_task_list;
 	m_thread_stack = new detail::thread_stack;
