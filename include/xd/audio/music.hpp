@@ -1,11 +1,11 @@
 #ifndef H_XD_AUDIO_MUSIC
 #define H_XD_AUDIO_MUSIC
 
-#include <xd/config.hpp>
 #include <xd/ref_counted.hpp>
 #include <boost/intrusive_ptr.hpp>
 #include <boost/noncopyable.hpp>
 #include <string>
+#include <utility>
 
 #pragma warning(disable: 4275)
 
@@ -21,7 +21,7 @@ namespace xd
 	public:
 		typedef boost::intrusive_ptr<music> ptr;
 
-		music(const std::string& filename);
+		music(const std::string& filename, unsigned int flags = 0);
 		virtual ~music();
 
 		void play();
@@ -32,17 +32,17 @@ namespace xd
 		bool paused() const;
 		bool stopped() const;
 
-		void set_offset(float offset);
+		void set_offset(unsigned int offset);
 		void set_volume(float volume);
 		void set_pitch(float pitch);
 		void set_looping(bool looping);
-		void set_loop_point(float time);
+		void set_loop_points(unsigned int start, unsigned int end = -1);
 
-		float get_offset() const;
+		unsigned int get_offset() const;
 		float get_volume() const;
 		float get_pitch() const;
 		bool get_looping() const;
-		float get_loop_point() const;
+		std::pair<unsigned int, unsigned int> get_loop_points() const;
 
 	private:
 		detail::music_handle *m_handle;
