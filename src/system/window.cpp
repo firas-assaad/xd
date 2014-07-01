@@ -1,5 +1,5 @@
 #include <GL/glew.h>
-#include <GL/glfw.h>
+#include <GL/glfw3.h>
 #include <xd/system/window.hpp>
 #include <xd/system/exceptions.hpp>
 
@@ -8,12 +8,12 @@ namespace
 {
 	xd::window *window_instance = nullptr;
 
-	void on_key_proxy(int key, int action)
+	void on_key_proxy(GLFWwindow* window, int key, int scancode, int action, int mods)
 	{
 		window_instance->on_input(xd::INPUT_KEYBOARD, key, action);
 	}
 
-	void on_mouse_proxy(int key, int action)
+	void on_mouse_proxy(GLFWwindow* window, int key, int action, int mods)
 	{
 		window_instance->on_input(xd::INPUT_MOUSE, key, action);
 	}
@@ -34,33 +34,35 @@ xd::window::window(const std::string& title, int width, int height, const window
 		throw xd::window_creation_failed();
 	}
 	
-	glfwOpenWindowHint(GLFW_WINDOW_NO_RESIZE, !options.allow_resize);
-	glfwOpenWindowHint(GLFW_FSAA_SAMPLES, options.antialiasing_level);
-	glfwOpenWindowHint(GLFW_OPENGL_VERSION_MAJOR, options.major_version);
-	glfwOpenWindowHint(GLFW_OPENGL_VERSION_MINOR, options.minor_version);
+	glfwWindowHint(GLFW_RESIZABLE, options.allow_resize);
+	glfwWindowHint(GLFW_SAMPLES, options.antialiasing_level);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, options.major_version);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, options.minor_version);
+	glfwWindowHint(GLFW_DEPTH_BITS, options.depth_bits);
+	glfwWindowHint(GLFW_STENCIL_BITS, options.stencil_bits);
 
-	if (glfwOpenWindow(m_width, m_height, 8, 8, 8, 8, options.depth_bits, options.stencil_bits,
-		options.fullscreen ? GLFW_FULLSCREEN : GLFW_WINDOW) == GL_FALSE)
+	m_window = glfwCreateWindow(m_width, m_height, title.c_str(),
+			options.fullscreen ? glfwGetPrimaryMonitor() : NULL, NULL);
+	
+	if (!m_window)
 	{
 		glfwTerminate();
 		throw xd::window_creation_failed();
 	}
+	glfwMakeContextCurrent(m_window);
 
-	glfwSetWindowTitle(title.c_str());
 	if (options.display_cursor)
-		glfwEnable(GLFW_MOUSE_CURSOR);
+		glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 	else
-		glfwDisable(GLFW_MOUSE_CURSOR);
+		glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 
-	glfwEnable(GLFW_SYSTEM_KEYS);
-	glfwDisable(GLFW_AUTO_POLL_EVENTS);
-	glfwDisable(GLFW_STICKY_KEYS);
-	glfwDisable(GLFW_STICKY_MOUSE_BUTTONS);
-	glfwDisable(GLFW_KEY_REPEAT);
+	//glfwEnable(GLFW_SYSTEM_KEYS);
+	glfwSetInputMode(m_window, GLFW_STICKY_KEYS, GL_TRUE);
+	glfwSetInputMode(m_window, GLFW_STICKY_MOUSE_BUTTONS, GL_TRUE);
 
 	GLenum err = glewInit();
 	if (err != GLEW_OK) {
-		glfwCloseWindow();
+		glfwDestroyWindow(m_window);
 		glfwTerminate();
 		throw xd::window_creation_failed();
 	}
@@ -75,10 +77,10 @@ xd::window::window(const std::string& title, int width, int height, const window
 	m_fps = m_frame_count = 0;
 
 	// register input callbacks
-	glfwSetKeyCallback(&on_key_proxy);
-	glfwSetMouseButtonCallback(&on_mouse_proxy);
+	glfwSetKeyCallback(m_window, &on_key_proxy);
+	glfwSetMouseButtonCallback(m_window, &on_mouse_proxy);
 
-	for(int button = 0; button < 14; button++) {
+	for (int button = 0; button < 18; ++button) {
 		joystick_state.buttons[button] = GLFW_RELEASE;
 	}
 
@@ -87,7 +89,7 @@ xd::window::window(const std::string& title, int width, int height, const window
 
 xd::window::~window()
 {
-	glfwCloseWindow();
+	glfwDestroyWindow(m_window);
 	glfwTerminate();
 	window_instance = nullptr;
 }
@@ -123,31 +125,40 @@ void xd::window::on_input(input_type type, int key, int action)
 void xd::window::update()
 {
 	// Update joystick values
-	glfwGetJoystickButtons(0, joystick_state.buttons, 12);
-	glfwGetJoystickPos(0, joystick_state.axes_values, 5);
+	int button_count;
+	int axes_count;
+	auto buttons = glfwGetJoystickButtons(0, &button_count);
+	auto axes = glfwGetJoystickAxes(0, &axes_count);
 
-	for(int axis = 0; axis < 5; axis++) {
-			if(joystick_state.axes_values[axis] < 0.5f && joystick_state.axes_values[axis] > -0.5f)
-				joystick_state.axes_values[axis] = 0.0f;
+	if (button_count > 14)
+		button_count = 14;
+	if (axes_count > 7)
+		axes_count = 7;
+
+	for (int button = 0; button < button_count; button++)
+	{
+		joystick_state.buttons[button] = buttons[button];
 	}
-	for (int button = 12; button < 16; button++) {
+	for(int axis = 0; axis < axes_count; axis++) {
+		joystick_state.axes_values[axis] = axes[axis];
+		if(joystick_state.axes_values[axis] < 0.5f && joystick_state.axes_values[axis] > -0.5f)
+			joystick_state.axes_values[axis] = 0.0f;
+	}
+	for (int button = 14; button < 18; button++) {
 		joystick_state.buttons[button] = GLFW_RELEASE;
 	}
-	if (joystick_state.axes_values[0] > 0.0f)
+	if (joystick_state.axes_values[0] > 0.0f || joystick_state.buttons[11])
 		joystick_state.buttons[JOYSTICK_AXIS_RIGHT.code] = GLFW_PRESS;
-	else if (joystick_state.axes_values[0] < 0.0f)
+	else if (joystick_state.axes_values[0] < 0.0f || joystick_state.buttons[13])
 		joystick_state.buttons[JOYSTICK_AXIS_LEFT.code] = GLFW_PRESS;
-	if (joystick_state.axes_values[1] > 0.0f)
+	if (joystick_state.axes_values[1] < 0.0f || joystick_state.buttons[10])
 		joystick_state.buttons[JOYSTICK_AXIS_UP.code] = GLFW_PRESS;
-	else if (joystick_state.axes_values[1] < 0.0f)
+	else if (joystick_state.axes_values[1] > 0.0f || joystick_state.buttons[12])
 		joystick_state.buttons[JOYSTICK_AXIS_DOWN.code] = GLFW_PRESS;
 
-	for (int button = 0; button < 16; button++) {
+	for (int button = 0; button < 18; button++) {
 		if (joystick_state.buttons[button] != joystick_state.prev_buttons[button])
 			on_input(INPUT_JOYSTICK, button, joystick_state.buttons[button]);
-	}
-	glfwGetJoystickButtons(0, joystick_state.prev_buttons, 12);
-	for (int button = 12; button < 16; button++) {
 		joystick_state.prev_buttons[button] = joystick_state.buttons[button];
 	}
 	// this is used to keep track which triggered keys list triggered() uses
@@ -192,25 +203,25 @@ void xd::window::clear()
 
 void xd::window::swap()
 {
-	glfwSwapBuffers();
+	glfwSwapBuffers(m_window);
 }
 
 bool xd::window::closed() const
 {
-	return (glfwGetWindowParam(GLFW_OPENED) == GL_FALSE);
+	return glfwWindowShouldClose(m_window) != 0;
 }
 
 int xd::window::width() const
 {
 	int width;
-	glfwGetWindowSize(&width, nullptr);
+	glfwGetWindowSize(m_window, &width, nullptr);
 	return width;
 }
 
 int xd::window::height() const
 {
 	int height;
-	glfwGetWindowSize(nullptr, &height);
+	glfwGetWindowSize(m_window, nullptr, &height);
 	return height;
 }
 
@@ -291,14 +302,14 @@ void xd::window::unbind_key(const std::string& virtual_key)
 bool xd::window::pressed(const xd::key& key, int modifiers) const
 {
 	if (key.type == xd::INPUT_KEYBOARD) {
-		if (glfwGetKey(key.code))
+		if (glfwGetKey(m_window, key.code))
 			return true;
 		/*Uint8 *state = SDL_GetKeyboardState(0);
 		if (state[SDL_GetScancodeFromKey(key.code)] && modifier(modifiers))
 			return true;*/
 	}
 	if (key.type == xd::INPUT_MOUSE) {
-		if (glfwGetMouseButton(key.code))
+		if (glfwGetMouseButton(m_window, key.code))
 				return true;
 		/*if ((SDL_GetMouseState(0, 0) & SDL_BUTTON(key.code)) != 0 && modifier(modifiers))
 			return true;*/
@@ -354,7 +365,7 @@ bool xd::window::modifier(int modifiers) const
 
 bool xd::window::joystick_present(int id) const
 {
-	return glfwGetJoystickParam(id, GLFW_PRESENT) == 1;
+	return glfwJoystickPresent(id) != 0;
 }
 
 xd::event_link xd::window::bind_input_event(const std::string& event_name, input_event_callback_t callback,

@@ -19,6 +19,8 @@
 #pragma warning(disable: 4275 4251)
 #endif
 
+struct GLFWwindow;
+
 namespace xd
 {
 	class XD_API window : public xd::ref_counted, public boost::noncopyable
@@ -80,6 +82,7 @@ namespace xd
 		void on_input(input_type type, int key, int action);
 
 	private:
+		GLFWwindow* m_window;
 		// window width/height
 		int m_width;
 		int m_height;
@@ -111,9 +114,9 @@ namespace xd
 		trigger_keys_t m_tick_handler_triggered_keys;
 
 		struct {
-			float axes_values[5];
-			unsigned char buttons[16];
-			unsigned char prev_buttons[16];
+			float axes_values[7];
+			unsigned char buttons[18];
+			unsigned char prev_buttons[18];
 		} joystick_state;
 
 

@@ -23,7 +23,10 @@ xd::sound::sound(const std::string& filename, unsigned int flags)
 {
 	auto audio_handle = xd::audio::get_handle();
 	if (!audio_handle)
+	{
 		xd::audio::init();
+		audio_handle = xd::audio::get_handle();
+	}
 	// load sound from file
 	flags = flags ? flags : FMOD_LOOP_OFF | FMOD_2D;
 	auto handle = std::unique_ptr<detail::sound_handle>(new detail::sound_handle);

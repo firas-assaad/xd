@@ -33,7 +33,7 @@ namespace xd
 	{
 		typedef boost::intrusive_ptr<render_component> ptr;
 	};
-    
+
 	template <typename T>
 	struct component : detail::component<T>
 	{
@@ -45,7 +45,7 @@ namespace xd
 	protected:
 		~entity_placeholder() {}
 	};
-    
+
 	template <typename Class = entity_placeholder>
 	class entity : public xd::ref_counted
 	{
@@ -150,25 +150,25 @@ namespace xd
 			on(name, &T::operator(), &obj, filter);
 			//get_event_bus<typename detail::first_argument<T>::type>()[name].add(obj, filter);
 		}
-        
+
 		template <typename T>
 		void trigger(const std::string& name, const T& args)
 		{
 			get_event_bus<T>()[name](args);
 		}
-        
+
 		void add_component(const logic_component_ptr& component, int priority = 0)
 		{
 			m_components[priority].logic_components.push_back(component);
 			component->init(*static_cast<Class*>(this));
 		}
-        
+
 		void add_component(const render_component_ptr& component, int priority = 0)
 		{
 			m_components[priority].render_components.push_back(component);
 			component->init(*static_cast<Class*>(this));
 		}
-        
+
 		void add_component(const component_ptr& component, int priority = 0)
 		{
 			m_components[priority].logic_components.push_back(component);
@@ -236,7 +236,7 @@ namespace xd
 		{
 			m_components.clear();
 		}
-        
+
 		void update()
 		{
 			for (auto i = m_components.begin(); i != m_components.end(); ++i) {
@@ -261,7 +261,7 @@ namespace xd
 		entity()
 		{
 		}
-        
+
 	private:
 		typedef std::list<typename detail::logic_component<Class>::ptr> logic_component_list_t;
 		typedef std::list<typename detail::render_component<Class>::ptr> render_component_list_t;
@@ -279,10 +279,10 @@ namespace xd
 
 		// we have a list of logic and render components per priority
 		std::map<int, components_set> m_components;
-        
+
 		// the bound events
 		std::unordered_map<std::size_t, boost::any> m_events;
-        
+
 		// utility function to return event_bus for given arg type
 		template <typename T>
 		event_bus<T>& get_event_bus()
