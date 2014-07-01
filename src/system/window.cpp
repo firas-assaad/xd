@@ -56,9 +56,8 @@ xd::window::window(const std::string& title, int width, int height, const window
 	else
 		glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 
-	//glfwEnable(GLFW_SYSTEM_KEYS);
-	glfwSetInputMode(m_window, GLFW_STICKY_KEYS, GL_TRUE);
-	glfwSetInputMode(m_window, GLFW_STICKY_MOUSE_BUTTONS, GL_TRUE);
+	glfwSetInputMode(m_window, GLFW_STICKY_KEYS, GL_FALSE);
+	glfwSetInputMode(m_window, GLFW_STICKY_MOUSE_BUTTONS, GL_FALSE);
 
 	GLenum err = glewInit();
 	if (err != GLEW_OK) {
