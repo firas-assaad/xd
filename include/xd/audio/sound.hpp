@@ -37,7 +37,7 @@ namespace xd
 		void set_volume(float volume);
 		void set_pitch(float pitch);
 		void set_looping(bool looping);
-		void set_loop_points(unsigned int start, unsigned int end = -1);
+		void set_loop_points(unsigned int start, unsigned int end = 0);
 
 		unsigned int get_offset() const;
 		float get_volume() const;

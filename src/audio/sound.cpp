@@ -2,6 +2,7 @@
 #include <xd/audio/audio.hpp>
 #include <xd/audio/detail/audio_handle.hpp>
 #include <xd/audio/exceptions.hpp>
+#include <boost/lexical_cast.hpp>
 #include <FMOD/fmod.hpp>
 #include <memory>
 
@@ -12,11 +13,26 @@ namespace xd { namespace detail {
 		FMOD::Sound* sound;
 		FMOD::Channel* channel;
 		sound_handle() : sound(nullptr), channel(nullptr) {}
+		int get_loop_tag(const char* name) {
+			if (!sound)
+				return -1;
+			FMOD_TAG tag;
+			int value = -1;
+			if (sound->getTag(name, 0, &tag) == FMOD_OK) {
+				if (tag.datatype == FMOD_TAGDATATYPE_STRING) {
+					std::string data = static_cast<const char*>(tag.data);
+					value = boost::lexical_cast<int>(data);
+				} else {
+					value = -1;
+				}
+			}
+			return value;
+		}
 		~sound_handle() {
 			sound->release();
 		}
 	};
-	const FMOD_TIMEUNIT time_unit = FMOD_TIMEUNIT_MS;
+	const FMOD_TIMEUNIT time_unit = FMOD_TIMEUNIT_PCM;
 } }
 
 xd::sound::sound(const std::string& filename, unsigned int flags)
@@ -39,6 +55,26 @@ xd::sound::sound(const std::string& filename, unsigned int flags)
 		throw audio_file_load_failed(filename);
 	// all ok, release the memory to the real handle
 	m_handle = handle.release();
+	// Set loop points if specified in tags
+	if (flags & FMOD_LOOP_NORMAL) {
+		int loop_start = m_handle->get_loop_tag("LOOPSTART");
+		int loop_end = m_handle->get_loop_tag("LOOPLENGTH");
+		unsigned int u_length = 0;
+		m_handle->sound->getLength(&u_length, detail::time_unit);
+		int length = static_cast<int>(u_length);
+		// Make sure loop start and end are within acceptable bounds
+		if (loop_start < 0 || loop_start >= length)
+			loop_start = 0;
+		if (loop_end < 0)
+			loop_end = m_handle->get_loop_tag("LOOPEND");
+		else
+			loop_end = loop_start + loop_end;
+		if (loop_end < 0 || loop_end >= length)
+			loop_end = length - 1;
+		// Set loop points if needed
+		if (loop_start != 0 || loop_end != length - 1)
+			set_loop_points(loop_start, loop_end);
+	}
 }
 
 xd::sound::~sound()
@@ -104,8 +140,10 @@ void xd::sound::set_looping(bool looping)
 
 void xd::sound::set_loop_points(unsigned int start, unsigned int end)
 {
-	if (end == -1)
+	if (end == 0) {
 		m_handle->sound->getLength(&end, detail::time_unit);
+		end--;
+	}
 	m_handle->sound->setLoopPoints(start, detail::time_unit, end, detail::time_unit);
 }
 
