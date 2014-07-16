@@ -131,6 +131,26 @@ namespace xd { namespace lua { namespace wrapper {
 		return window.triggered(key, modifiers);
 	}
 
+	bool window_triggered_once_key1(window& window, const key& key)
+	{
+		return window.triggered_once(key);
+	}
+
+	bool window_triggered_once_key2(window& window, const key& key, int modifiers)
+	{
+		return window.triggered_once(key, modifiers);
+	}
+
+	bool window_triggered_once_virtual1(window& window, const std::string& key)
+	{
+		return window.triggered_once(key);
+	}
+
+	bool window_triggered_once_virtual2(window& window, const std::string& key, int modifiers)
+	{
+		return window.triggered_once(key, modifiers);
+	}
+
 	event_link window_bind_input_event1(window& window, std::string event_name, const luabind::object& obj)
 	{
 		return window.bind_input_event(event_name, function<bool>(obj, true));
@@ -292,6 +312,10 @@ void xd::lua::virtual_machine::load_library(const std::string& module_name)
 			.def("triggered", &wrapper::window_triggered_key2)
 			.def("triggered", &wrapper::window_triggered_virtual1)
 			.def("triggered", &wrapper::window_triggered_virtual2)
+			.def("triggered_once", &wrapper::window_triggered_once_key1)
+			.def("triggered_once", &wrapper::window_triggered_once_key2)
+			.def("triggered_once", &wrapper::window_triggered_once_virtual1)
+			.def("triggered_once", &wrapper::window_triggered_once_virtual2)
 			.def("modifier", &window::modifier)
 			.def("bind_input_event", &wrapper::window_bind_input_event1)
 			.def("bind_input_event", &wrapper::window_bind_input_event2)

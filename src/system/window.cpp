@@ -356,20 +356,28 @@ bool xd::window::triggered(const std::string& key, int modifiers) const
 	return false;
 }
 
-void xd::window::untrigger(const xd::key& key) {
-	if (m_in_update)
-		m_tick_handler_triggered_keys.erase(key);
-	else
-		m_triggered_keys.erase(key);
+bool xd::window::triggered_once(const xd::key& key, int modifiers)
+{
+	if (triggered(key, modifiers)) {
+		if (m_in_update)
+			m_tick_handler_triggered_keys.erase(key);
+		else
+			m_triggered_keys.erase(key);
+		return true;
+	}
+	return false;
 }
 
-void xd::window::untrigger(const std::string& key) {
+bool xd::window::triggered_once(const std::string& key, int modifiers)
+{
 	auto i = m_virtual_to_key.find(key);
 	if (i != m_virtual_to_key.end()) {
 		for (auto j = i->second.begin(); j != i->second.end(); ++j) {
-			untrigger(*j);
+			if (triggered_once(*j, modifiers))
+				return true;
 		}
 	}
+	return false;
 }
 
 bool xd::window::modifier(int modifiers) const

@@ -61,9 +61,8 @@ namespace xd
 
 		bool triggered(const key& key, int modifiers = 0) const;
 		bool triggered(const std::string& key, int modifiers = 0) const;
-
-		void untrigger(const key& key);
-		void untrigger(const std::string& key);
+		bool triggered_once(const key& key, int modifiers = 0);
+		bool triggered_once(const std::string& key, int modifiers = 0);
 
 		bool modifier(int modifiers) const;
 
