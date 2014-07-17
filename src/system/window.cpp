@@ -205,6 +205,10 @@ void xd::window::swap()
 	glfwSwapBuffers(m_window);
 }
 
+bool xd::window::focused() const {
+	return glfwGetWindowAttrib(m_window, GLFW_FOCUSED) == GL_TRUE;
+}
+
 bool xd::window::closed() const
 {
 	return glfwWindowShouldClose(m_window) != 0;

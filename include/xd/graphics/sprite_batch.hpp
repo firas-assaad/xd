@@ -16,6 +16,7 @@
 
 namespace xd
 {
+	class shader_program;
 	// sprite batch
 	class XD_API sprite_batch : public xd::ref_counted, public boost::noncopyable
 	{
@@ -26,13 +27,17 @@ namespace xd
 		virtual ~sprite_batch();
 
 		void clear();
+
 		typedef std::vector<xd::vertex_batch<detail::sprite_vertex_traits>::ptr> batch_list;
 		batch_list create_batches();
+
 		void draw(const xd::mat4& mvp_matrix, const batch_list& batches);
 		void draw(const mat4& matrix);
 		
 		void set_scale(float scale);
 		float get_scale() const;
+
+		void set_shader(shader_program* shader);
 
 		void add(const texture::ptr texture, float x, float y,
 			const vec4& color = vec4(1, 1, 1, 1), const vec2& origin = vec2(0, 0));

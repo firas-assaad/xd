@@ -23,7 +23,8 @@ namespace xd { namespace detail {
 	struct sprite_batch_data
 	{
 		std::deque<sprite> sprites;
-		xd::sprite_shader shader;
+		std::unique_ptr<xd::shader_program> shader;
+		sprite_batch_data() : shader(new xd::sprite_shader) {}
 	};
 
 } }
@@ -100,16 +101,16 @@ void xd::sprite_batch::draw(const xd::mat4& mvp_matrix, const xd::sprite_batch::
 {
 	assert(m_data->sprites.size() == batches.size());
 	// setup the shader
-	m_data->shader.use();
-	m_data->shader.bind_uniform("mvpMatrix", mvp_matrix);
+	m_data->shader->use();
+	m_data->shader->bind_uniform("mvpMatrix", mvp_matrix);
 
 	// iterate through all sprites
 	for (unsigned int i = 0; i < m_data->sprites.size(); ++i) {
 		auto& sprite = m_data->sprites[i];
 		auto& batch = batches[i];
 		// give required params to shader
-		m_data->shader.bind_uniform("vPosition", vec4(sprite.x, sprite.y, sprite.depth, 0));
-		m_data->shader.bind_uniform("vColor", sprite.color);
+		m_data->shader->bind_uniform("vPosition", vec4(sprite.x, sprite.y, sprite.depth, 0));
+		m_data->shader->bind_uniform("vColor", sprite.color);
 
 		// bind the texture
 		sprite.tex->bind(GL_TEXTURE0);
@@ -125,8 +126,8 @@ void xd::sprite_batch::draw(const xd::mat4& mvp_matrix)
 	vertex_batch<detail::sprite_vertex_traits> batch(GL_QUADS);
 
 	// setup the shader
-	m_data->shader.use();
-	m_data->shader.bind_uniform("mvpMatrix", mvp_matrix);
+	m_data->shader->use();
+	m_data->shader->bind_uniform("mvpMatrix", mvp_matrix);
 
 	// create a quad for rendering sprites
 	detail::sprite_vertex quad[4];
@@ -169,8 +170,8 @@ void xd::sprite_batch::draw(const xd::mat4& mvp_matrix)
 		batch.load(&quad[0], 4);
 		
 		// give required params to shader
-		m_data->shader.bind_uniform("vPosition", vec4(i->x, i->y, i->depth, 0));
-		m_data->shader.bind_uniform("vColor", i->color);
+		m_data->shader->bind_uniform("vPosition", vec4(i->x, i->y, i->depth, 0));
+		m_data->shader->bind_uniform("vColor", i->color);
 
 		// bind the texture
 		i->tex->bind(GL_TEXTURE0);
@@ -188,6 +189,10 @@ void xd::sprite_batch::set_scale(float scale)
 float xd::sprite_batch::get_scale() const
 {
 	return m_scale;
+}
+
+void xd::sprite_batch::set_shader(shader_program* shader) {
+	m_data->shader.reset(shader);
 }
 
 void xd::sprite_batch::add(const xd::texture::ptr texture, float x, float y, const xd::vec4& color, const xd::vec2& origin)

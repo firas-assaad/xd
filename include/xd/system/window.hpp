@@ -39,6 +39,7 @@ namespace xd
 		void clear();
 		void swap();
 
+		bool focused() const;
 		bool closed() const;
 		int width() const;
 		int height() const;
