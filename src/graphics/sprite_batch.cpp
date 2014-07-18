@@ -97,12 +97,13 @@ xd::sprite_batch::batch_list xd::sprite_batch::create_batches()
 	return batches;
 }
 
-void xd::sprite_batch::draw(const xd::mat4& mvp_matrix, const xd::sprite_batch::batch_list& batches)
+void xd::sprite_batch::draw(const xd::mat4& mvp_matrix, const xd::sprite_batch::batch_list& batches, int ticks)
 {
 	assert(m_data->sprites.size() == batches.size());
 	// setup the shader
 	m_data->shader->use();
 	m_data->shader->bind_uniform("mvpMatrix", mvp_matrix);
+	m_data->shader->bind_uniform("ticks", ticks);
 
 	// iterate through all sprites
 	for (unsigned int i = 0; i < m_data->sprites.size(); ++i) {
@@ -114,13 +115,14 @@ void xd::sprite_batch::draw(const xd::mat4& mvp_matrix, const xd::sprite_batch::
 
 		// bind the texture
 		sprite.tex->bind(GL_TEXTURE0);
+		m_data->shader->bind_uniform("vTexSize", vec2(sprite.tex->width(), sprite.tex->height()));
 		
 		// draw it
 		batch->render();
 	}
 }
 
-void xd::sprite_batch::draw(const xd::mat4& mvp_matrix)
+void xd::sprite_batch::draw(const xd::mat4& mvp_matrix, int ticks)
 {
 	// create a vertex batch for sending vertex data
 	vertex_batch<detail::sprite_vertex_traits> batch(GL_QUADS);
@@ -128,6 +130,7 @@ void xd::sprite_batch::draw(const xd::mat4& mvp_matrix)
 	// setup the shader
 	m_data->shader->use();
 	m_data->shader->bind_uniform("mvpMatrix", mvp_matrix);
+	m_data->shader->bind_uniform("ticks", ticks);
 
 	// create a quad for rendering sprites
 	detail::sprite_vertex quad[4];
@@ -175,6 +178,7 @@ void xd::sprite_batch::draw(const xd::mat4& mvp_matrix)
 
 		// bind the texture
 		i->tex->bind(GL_TEXTURE0);
+		m_data->shader->bind_uniform("vTexSize", vec2(i->tex->width(), i->tex->height()));
 		
 		// draw it
 		batch.render();

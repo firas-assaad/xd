@@ -31,8 +31,8 @@ namespace xd
 		typedef std::vector<xd::vertex_batch<detail::sprite_vertex_traits>::ptr> batch_list;
 		batch_list create_batches();
 
-		void draw(const xd::mat4& mvp_matrix, const batch_list& batches);
-		void draw(const mat4& matrix);
+		void draw(const xd::mat4& mvp_matrix, const batch_list& batches, int ticks = 0);
+		void draw(const mat4& matrix, int ticks = 0);
 		
 		void set_scale(float scale);
 		float get_scale() const;
