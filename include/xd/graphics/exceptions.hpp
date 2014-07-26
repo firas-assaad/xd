@@ -24,6 +24,14 @@ namespace xd
 		}
 	};
 
+	struct freetype_init_failed : exception
+	{
+		freetype_init_failed()
+			: exception("failed to initialize freetype2 library.")
+		{
+		}
+	};
+
 	struct font_load_failed : exception
 	{
 		font_load_failed(const std::string& font)

@@ -11,7 +11,21 @@
 
 namespace xd { namespace detail { namespace font {
 
-	FT_Library *library = nullptr;
+	class ft_lib {
+	public:
+		ft_lib() : m_library(nullptr) {
+			int error = FT_Init_FreeType(&m_library);
+			if (error)
+				throw freetype_init_failed();
+		}
+		~ft_lib() {
+			FT_Done_FreeType(m_library);
+		}
+		operator FT_Library() { return m_library; }
+	private:
+		FT_Library m_library;
+	} library;
+	
 
 	struct vertex
 	{
@@ -34,14 +48,14 @@ namespace xd { namespace detail { namespace font {
 
 	struct glyph
 	{
-        glyph() {}
-        glyph(const glyph& other)
-            : glyph_index(other.glyph_index)
-            , texture_id(other.texture_id)
-            , quad_ptr(other.quad_ptr)
-            , advance(other.advance)
-            , offset(other.offset)
-        {}
+		glyph() {}
+		glyph(const glyph& other)
+			: glyph_index(other.glyph_index)
+			, texture_id(other.texture_id)
+			, quad_ptr(other.quad_ptr)
+			, advance(other.advance)
+			, offset(other.offset)
+		{}
 
 		FT_UInt glyph_index;
 		GLuint texture_id;
@@ -58,26 +72,19 @@ namespace xd { namespace detail { namespace font {
 } } }
 
 xd::font::font(const std::string& filename)
-    : m_filename(filename)
+	: m_filename(filename)
 	, m_mvp_uniform("mvpMatrix")
 	, m_position_uniform("vPosition")
 	, m_color_uniform("vColor")
 	, m_texture_uniform("colorMap")
 {
 	int error;
-	if (!detail::font::library)
-	{
-		detail::font::library = new FT_Library;
-		error = FT_Init_FreeType(detail::font::library);
-		if (error)
-			throw font_load_failed(filename);
-	}
 
 	// construct a new font face; make sure it gets deleted if exception is thrown
 	m_face = std::unique_ptr<detail::font::face>(new detail::font::face);
 
 	// load the font
-	error = FT_New_Face(*detail::font::library, filename.c_str(), 0, &m_face->handle);
+	error = FT_New_Face(detail::font::library, filename.c_str(), 0, &m_face->handle);
 	if (error)
 		throw font_load_failed(filename);
 
@@ -143,7 +150,7 @@ const xd::detail::font::glyph& xd::font::load_glyph(utf8::uint32_t char_index, i
 		throw glyph_load_failed(m_filename, char_index);
 
 	// create glyph
-    m_glyph_map[char_index] = std::unique_ptr<detail::font::glyph>(new detail::font::glyph);
+	m_glyph_map[char_index] = std::unique_ptr<detail::font::glyph>(new detail::font::glyph);
 	detail::font::glyph& glyph = *m_glyph_map[char_index];
 	glyph.glyph_index = glyph_index;
 	glyph.advance.x = static_cast<float>(m_face->handle->glyph->advance.x >> 6);
