@@ -55,9 +55,17 @@ namespace xd
 	struct asset_serializer<xd::texture>
 	{
 		typedef std::string key_type;
-		key_type operator()(const std::string& texture) const
+		key_type operator()(const std::string& filename,
+			GLint wrap_s = GL_REPEAT, GLint wrap_t = GL_REPEAT,
+			GLint mag_filter = GL_LINEAR, GLint min_filter = GL_LINEAR) const
 		{
-			return texture;
+			return filename;
+		}
+		key_type operator()(const xd::image& image,
+			GLint wrap_s = GL_REPEAT, GLint wrap_t = GL_REPEAT,
+			GLint mag_filter = GL_LINEAR, GLint min_filter = GL_LINEAR) const
+		{
+			return image.filename();
 		}
 	};
 }

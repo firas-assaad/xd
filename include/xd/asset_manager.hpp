@@ -102,7 +102,7 @@ namespace xd
 #endif
 
 		template <typename T>
-		void release(const handle<T>& resource)
+		void release(typename T::ptr resource)
 		{
 			// get the persistent map
 			auto& persistent_assets = get_persistent_asset_map<T>();
@@ -116,17 +116,17 @@ namespace xd
 			}
 
 			// get the non-persistent map
-			auto& loaded_assets = get_asset_map<T>();
+			//auto& loaded_assets = get_asset_map<T>();
 			// iterate through each loaded asset
-			for (auto it2 = loaded_assets.begin(); it2 != loaded_assets.end(); ++it2) {
-				// check whether to remove this resource
-				if (auto handle = it2->second.lock()) {
-					if (resource.get() == handle.get()) {
-						loaded_assets.erase(it2);
-						break;
-					}
-				}
-			}
+			//for (auto it2 = loaded_assets.begin(); it2 != loaded_assets.end(); ++it2) {
+			//	// check whether to remove this resource
+			//	if (auto handle = it2->second.lock()) {
+			//		if (resource.get() == handle.get()) {
+			//			loaded_assets.erase(it2);
+			//			break;
+			//		}
+			//	}
+			//}
 		}
 
 	private:
@@ -134,9 +134,9 @@ namespace xd
 		std::map<std::size_t, boost::any> m_persistent_asset_type_map;
 
 		template <typename T>
-		std::unordered_map<typename asset_serializer<T>::key_type, typename T::weak_handle>& get_asset_map()
+		std::unordered_map<typename asset_serializer<T>::key_type, typename T::weak_ptr>& get_asset_map()
 		{
-			typedef std::unordered_map<typename asset_serializer<T>::key_type, typename T::weak_handle> asset_map_type;
+			typedef std::unordered_map<typename asset_serializer<T>::key_type, typename T::weak_ptr> asset_map_type;
 			std::size_t hash = typeid(T).hash_code();
 			auto it = m_asset_type_map.find(hash);
 			if (it == m_asset_type_map.end())
@@ -145,9 +145,9 @@ namespace xd
 		}
 
 		template <typename T>
-		std::unordered_map<typename asset_serializer<T>::key_type, typename T::handle>& get_persistent_asset_map()
+		std::unordered_map<typename asset_serializer<T>::key_type, typename T::ptr>& get_persistent_asset_map()
 		{
-			typedef std::unordered_map<typename asset_serializer<T>::key_type, typename T::handle> asset_map_type;
+			typedef std::unordered_map<typename asset_serializer<T>::key_type, typename T::ptr> asset_map_type;
 			std::size_t hash = typeid(T).hash_code();
 			auto it = m_persistent_asset_type_map.find(hash);
 			if (it == m_persistent_asset_type_map.end())

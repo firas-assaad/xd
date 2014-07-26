@@ -52,6 +52,7 @@ void xd::image::load(const std::string& filename)
 
 	// convert image to RGBA
 	ilConvertImage(IL_RGBA, IL_UNSIGNED_BYTE);
+	m_filename = filename;
 }
 
 void xd::image::save(const std::string& filename) const
@@ -61,16 +62,6 @@ void xd::image::save(const std::string& filename) const
 
 	// save image
 	ilSaveImage(filename.c_str());
-}
-
-int xd::image::width() const
-{
-	return m_width;
-}
-
-int xd::image::height() const
-{
-	return m_height;
 }
 
 void *xd::image::data()

@@ -29,8 +29,10 @@ namespace xd
 		void load(const std::string& filename);
 		void save(const std::string& filename) const;
 
-		int width() const;
-		int height() const;
+		int width() const { return m_width; }
+		int height() const { return m_height; }
+
+		std::string filename() const { return m_filename; }
 
 		void *data();
 		const void *data() const;
@@ -39,6 +41,7 @@ namespace xd
 		detail::image::handle_ptr m_image;
 		int m_width;
 		int m_height;
+		std::string m_filename;
 
 		void init();
 	};
