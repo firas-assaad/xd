@@ -35,6 +35,7 @@ namespace xd
 		void load(const xd::image& image);
 		void load(int width, int height, const void *data);
 		void load(const void *data);
+		void copy_read_buffer(int x, int y, int width, int height);
 
 		GLuint texture_id() const;
 		int width() const;

@@ -102,6 +102,14 @@ void xd::texture::load(const void *data)
 	}
 }
 
+void xd::texture::copy_read_buffer(int x, int y, int width, int height)
+{
+	bind();
+	m_width = width;
+	m_height = height;
+	glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, x, y, m_width, m_height);
+}
+
 GLuint xd::texture::texture_id() const
 {
 	return m_texture_id;
