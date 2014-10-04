@@ -57,44 +57,44 @@ namespace xd
 			if (it != persistent_assets.end())
 				return it->second;
 			// otherwise check if it exists in the non-persistent map
-			auto& loaded_assets = get_asset_map<T>();
-			auto it2 = loaded_assets.find(cache_key);
-			if (it2 != loaded_assets.end()) {
-				// make sure it has not expired
-				if (auto handle = it2->second.lock()) {
-					// push it to the persistent asset map and remove from non-persistent map
-					persistent_assets.insert(std::make_pair(cache_key, handle));
-					loaded_assets.erase(it2);
-					return handle;
-				}
-				// it has expired, remove it
-				loaded_assets.erase(it2);
-			}
+			//auto& loaded_assets = get_asset_map<T>();
+			//auto it2 = loaded_assets.find(cache_key);
+			//if (it2 != loaded_assets.end()) {
+			//	// make sure it has not expired
+			//	if (auto handle = it2->second.lock()) {
+			//		// push it to the persistent asset map and remove from non-persistent map
+			//		persistent_assets.insert(std::make_pair(cache_key, handle));
+			//		loaded_assets.erase(it2);
+			//		return handle;
+			//	}
+			//	// it has expired, remove it
+			//	loaded_assets.erase(it2);
+			//}
 			// not loaded in either map, create it
 			typename T::ptr resource(new T(std::forward<Args>(args)...));
 			persistent_assets.insert(std::make_pair(cache_key, resource));
 			return resource;
 		}
 
-		template <typename T, typename... Args>
-		void release(Args&&... args)
-		{
-			// create serializer for asset type and get cache key
-			asset_serializer<T> serializer;
-			auto cache_key = serializer(std::forward<Args>(args)...);
+		//template <typename T, typename... Args>
+		//void release(Args&&... args)
+		//{
+		//	// create serializer for asset type and get cache key
+		//	asset_serializer<T> serializer;
+		//	auto cache_key = serializer(std::forward<Args>(args)...);
 
-			// check if it's in the persistent map
-			auto& persistent_assets = get_persistent_asset_map<T>();
-			auto it = persistent_assets.find(cache_key);
-			if (it != persistent_assets.end())
-				persistent_assets.erase(it);
+		//	// check if it's in the persistent map
+		//	auto& persistent_assets = get_persistent_asset_map<T>();
+		//	auto it = persistent_assets.find(cache_key);
+		//	if (it != persistent_assets.end())
+		//		persistent_assets.erase(it);
 
-			// check if it's in the non-persistent map
-			auto& loaded_assets = get_asset_map<T>();
-			auto it2 = loaded_assets.find(cache_key);
-			if (it2 != loaded_assets.end())
-				loaded_assets.erase(it2);
-		}
+		//	// check if it's in the non-persistent map
+		//	auto& loaded_assets = get_asset_map<T>();
+		//	auto it2 = loaded_assets.find(cache_key);
+		//	if (it2 != loaded_assets.end())
+		//		loaded_assets.erase(it2);
+		//}
 #else
 		// generate overloads for load, load_persistent and release with file iteration (up to XD_MAX_ARITY parameters)
 		#define BOOST_PP_ITERATION_PARAMS_1 (3, (1, XD_MAX_ARITY, <xd/detail/iterate_asset_manager.hpp>))
