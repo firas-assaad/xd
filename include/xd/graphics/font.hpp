@@ -45,6 +45,8 @@ namespace xd
 		void render(const std::string& text, const font_style& style,
 			shader_program::ptr shader, const glm::mat4& mvp, glm::vec2 *pos = 0);
 
+		float get_width(const std::string& text, const font_style& style);
+
 		const std::string& get_mvp_uniform();
 		const std::string& get_pos_uniform();
 		const std::string& get_color_uniform();
@@ -57,6 +59,7 @@ namespace xd
 	private:
 		typedef std::unordered_map<int, std::unique_ptr<detail::font::glyph>> glyph_map_t;
 		typedef std::unordered_map<std::string, font::ptr> font_map_t;
+		void load_size(int size);
 		const detail::font::glyph& load_glyph(utf8::uint32_t char_index, int size);
 
 		std::unique_ptr<detail::font::face> m_face;

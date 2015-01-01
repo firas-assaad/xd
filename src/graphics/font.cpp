@@ -87,20 +87,6 @@ xd::font::font(const std::string& filename)
 	error = FT_New_Face(detail::font::library, filename.c_str(), 0, &m_face->handle);
 	if (error)
 		throw font_load_failed(filename);
-
-	/*try {
-		error = FT_Set_Pixel_Sizes(m_face->handle, 0, size);
-		if (error)
-			throw font_load_failed(filename);
-
-		// pre-load 7-bit ASCII glyphs
-		for (int i = 0; i < 128; i++) {
-			load_glyph(i);
-		}
-	} catch (...) {
-		FT_Done_Face(m_face->handle);
-		throw;
-	}*/
 }
 
 xd::font::~font()
@@ -131,6 +117,32 @@ void xd::font::link_font(const std::string& type, font::ptr font)
 void xd::font::unlink_font(const std::string& type)
 {
 	m_linked_fonts.erase(type);
+}
+
+void xd::font::load_size(int size)
+{
+	// create a new size
+	FT_Size font_size;
+	if (FT_New_Size(m_face->handle, &font_size) != 0)
+		throw font_load_failed(m_filename);
+	// free the size in catch block if something goes wrong
+	try {
+		if (FT_Activate_Size(font_size) != 0)
+			throw font_load_failed(m_filename);
+		// set the pixel size
+		if (FT_Set_Pixel_Sizes(m_face->handle, 0, size) != 0)
+			throw font_load_failed(m_filename);
+		// pre-load 7-bit ASCII glyphs
+		for (int i = 0; i < 128; i++) {
+			load_glyph(i, size);
+		}
+	} catch (...) {
+		// free the size and re-throw
+		FT_Done_Size(font_size);
+		throw;
+	}
+	// insert the newly loaded size in the map
+	m_face->sizes.insert(std::make_pair(size, font_size));
 }
 
 const xd::detail::font::glyph& xd::font::load_glyph(utf8::uint32_t char_index, int size)
@@ -205,28 +217,8 @@ void xd::font::render(const std::string& text, const font_style& style,
 	// check if the font size is already loaded
 	auto it = m_face->sizes.find(style.m_size);
 	if (it == m_face->sizes.end()) {
-		// create a new size
-		FT_Size size;
-		if (FT_New_Size(m_face->handle, &size) != 0)
-			throw font_load_failed(m_filename);
-		// free the size in catch block if something goes wrong
-		try {
-			if (FT_Activate_Size(size) != 0)
-				throw font_load_failed(m_filename);
-			// set the pixel size
-			if (FT_Set_Pixel_Sizes(m_face->handle, 0, style.m_size) != 0)
-				throw font_load_failed(m_filename);
-			// pre-load 7-bit ASCII glyphs
-			for (int i = 0; i < 128; i++) {
-				load_glyph(i, style.m_size);
-			}
-		} catch (...) {
-			// free the size and re-throw
-			FT_Done_Size(size);
-			throw;
-		}
-		// insert the newly loaded size in the map
-		m_face->sizes.insert(std::make_pair(style.m_size, size));
+		// load the size
+		load_size(style.m_size);
 	} else {
 		// activate the size
 		FT_Activate_Size(it->second);
@@ -338,6 +330,61 @@ void xd::font::render(const std::string& text, const font_style& style,
 	// give back the updated coords
 	if (pos)
 		*pos = text_pos;
+}
+
+float xd::font::get_width(const std::string& text, const font_style& style)
+{
+	// check if we're rendering using this font or a linked font
+	if (style.m_type && style.m_type->length() != 0) {
+		font_map_t::iterator i = m_linked_fonts.find(*style.m_type);
+		if (i == m_linked_fonts.end())
+			throw invalid_font_type(*style.m_type);
+		font_style linked_style = style;
+		linked_style.m_type = boost::none;
+		return i->second->get_width(text, linked_style);
+	}
+
+	// check if the font size is already loaded
+	auto it = m_face->sizes.find(style.m_size);
+	if (it == m_face->sizes.end()) {
+		// load the size
+		load_size(style.m_size);
+	} else {
+		// activate the size
+		FT_Activate_Size(it->second);
+	}
+
+	// is kerning supported
+	FT_Bool kerning = FT_HAS_KERNING(m_face->handle);
+
+	// render each glyph in the string
+	float width = 0;
+
+	FT_UInt prev_glyph_index = 0;
+	auto i = text.begin();
+	while (i != text.end()) {
+		// get the unicode code point
+		utf8::uint32_t char_index = utf8::next(i, text.end());
+
+		// get the cached glyph, or cache if it is not yet cached
+		const detail::font::glyph& glyph = load_glyph(char_index, style.m_size);
+
+		// check for kerning
+		if (kerning && glyph.glyph_index && prev_glyph_index) {
+			FT_Vector kerning_delta;
+			FT_Get_Kerning(m_face->handle, prev_glyph_index, glyph.glyph_index, FT_KERNING_DEFAULT, &kerning_delta);
+			width += kerning_delta.x >> 6;
+		}
+		
+		// advance the position
+		width += glyph.advance.x;
+		width += style.m_letter_spacing;
+
+		// keep track of previous glyph to do kerning
+		prev_glyph_index = glyph.glyph_index;
+	}
+
+	return width;
 }
 
 const std::string& xd::font::get_mvp_uniform()
