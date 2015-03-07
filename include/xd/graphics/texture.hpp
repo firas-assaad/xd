@@ -17,10 +17,10 @@ namespace xd
 	public:
 		typedef boost::intrusive_ptr<texture> ptr;
 
-		texture(int width, int height, const void *data = 0,
+		texture(int width, int height, const void *data = 0, vec4 ck = vec4(0),
 			GLint wrap_s = GL_REPEAT, GLint wrap_t = GL_REPEAT,
 			GLint mag_filter = GL_LINEAR, GLint min_filter = GL_LINEAR);
-		texture(const std::string& filename,
+		texture(const std::string& filename, vec4 ck = vec4(0),
 			GLint wrap_s = GL_REPEAT, GLint wrap_t = GL_REPEAT,
 			GLint mag_filter = GL_LINEAR, GLint min_filter = GL_LINEAR);
 		texture(const xd::image& image,
@@ -31,15 +31,16 @@ namespace xd
 		void bind() const;
 		void bind(int unit) const;
 
-		void load(const std::string& filename);
+		void load(const std::string& filename, vec4 color_key = vec4(0));
 		void load(const xd::image& image);
-		void load(int width, int height, const void *data);
+		void load(int width, int height, const void *data, vec4 color_key = vec4(0));
 		void load(const void *data);
 		void copy_read_buffer(int x, int y, int width, int height);
 
 		GLuint texture_id() const;
 		int width() const;
 		int height() const;
+		vec4 color_key() const;
 
 		void set_wrap(GLint wrap_s, GLint wrap_t);
 		void set_filter(GLint mag_filter, GLint min_filter);
@@ -48,6 +49,7 @@ namespace xd
 		GLuint m_texture_id;
 		int m_width;
 		int m_height;
+		vec4 m_color_key;
 
 		void init();
 	};
@@ -56,7 +58,7 @@ namespace xd
 	struct asset_serializer<xd::texture>
 	{
 		typedef std::string key_type;
-		key_type operator()(const std::string& filename,
+		key_type operator()(const std::string& filename, xd::vec4 ck,
 			GLint wrap_s = GL_REPEAT, GLint wrap_t = GL_REPEAT,
 			GLint mag_filter = GL_LINEAR, GLint min_filter = GL_LINEAR) const
 		{

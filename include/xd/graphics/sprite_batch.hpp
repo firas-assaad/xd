@@ -40,18 +40,19 @@ namespace xd
 		void set_shader(shader_program* shader);
 
 		void add(const texture::ptr texture, float x, float y,
-			const vec4& color = vec4(1, 1, 1, 1), const vec2& origin = vec2(0, 0));
+			const vec4& color = vec4(1), const vec2& origin = vec2(0, 0));
 		void add(const texture::ptr texture, float x, float y, float rotation, float scale,
-			const vec4& color = vec4(1, 1, 1, 1), const vec2& origin = vec2(0, 0));
+			const vec4& color = vec4(1), const vec2& origin = vec2(0, 0));
 		void add(const texture::ptr texture, float x, float y, float rotation, const vec2& scale,
-			const vec4& color = vec4(1, 1, 1, 1), const vec2& origin = vec2(0, 0));
+			const vec4& color = vec4(1), const vec2& origin = vec2(0, 0));
 
 		void add(const texture::ptr texture, const rect& src, float x, float y,
-			const vec4& color = vec4(1, 1, 1, 1), const vec2& origin = vec2(0, 0));
+			const vec4& color = vec4(1), const vec2& origin = vec2(0, 0));
 		void add(const texture::ptr texture, const rect& src, float x, float y, float rotation, float scale,
-			const vec4& color = vec4(1, 1, 1, 1), const vec2& origin = vec2(0, 0));
-		void add(const texture::ptr texture, const rect& src, float x, float y, float rotation, const vec2& scale,
-			const vec4& color = vec4(1, 1, 1, 1), const vec2& origin = vec2(0, 0));
+			const vec4& color = vec4(1), const vec2& origin = vec2(0, 0));
+		void add(const texture::ptr texture, const rect& src, float x, float y,
+			float rotation, const vec2& scale, const vec4& color = vec4(1),
+			const vec2& origin = vec2(0, 0));
 
 	private:
 		detail::sprite_batch_data *m_data;

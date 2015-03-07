@@ -7,23 +7,23 @@ namespace xd { namespace detail { namespace texture {
 
 } } }
 
-xd::texture::texture(int width, int height, const void *data,
+xd::texture::texture(int width, int height, const void *data, xd::vec4 ck,
 	GLint wrap_s, GLint wrap_t, GLint mag_filter, GLint min_filter)
 {
 	init();
 	set_wrap(wrap_s, wrap_t);
 	set_filter(mag_filter, min_filter);
-	load(width, height, data);
+	load(width, height, data, ck);
 }
 
 
-xd::texture::texture(const std::string& filename,
+xd::texture::texture(const std::string& filename, xd::vec4 ck,
 	GLint wrap_s, GLint wrap_t, GLint mag_filter, GLint min_filter)
 {
 	init();
 	set_wrap(wrap_s, wrap_t);
 	set_filter(mag_filter, min_filter);
-	load(filename);
+	load(filename, ck);
 }
 
 xd::texture::texture(const xd::image& image,
@@ -39,6 +39,7 @@ void xd::texture::init()
 {
 	m_width = 0;
 	m_height = 0;
+	m_color_key = xd::vec4(0);
 
 	glGenTextures(1, &m_texture_id);
 	glBindTexture(GL_TEXTURE_2D, m_texture_id);
@@ -60,17 +61,18 @@ void xd::texture::bind(int unit) const
 	glBindTexture(GL_TEXTURE_2D, m_texture_id);
 }
 
-void xd::texture::load(const std::string& filename)
+void xd::texture::load(const std::string& filename, xd::vec4 color_key)
 {
-	load(image(filename));
+	load(image(filename, color_key));
 }
 
 void xd::texture::load(const image& image)
 {
-	load(image.width(), image.height(), image.data());
+	m_color_key = image.color_key();
+	load(image.width(), image.height(), image.data(), image.color_key());
 }
 
-void xd::texture::load(int width, int height, const void *data)
+void xd::texture::load(int width, int height, const void *data, xd::vec4 color_key)
 {
 	if (width <= 0)
 		throw std::invalid_argument("invalid texture width");
@@ -80,6 +82,7 @@ void xd::texture::load(int width, int height, const void *data)
 	// store the width and height
 	m_width = width;
 	m_height = height;
+	m_color_key = color_key;
 
 	// create storage for texture
 	bind();
@@ -123,6 +126,11 @@ int xd::texture::width() const
 int xd::texture::height() const
 {
 	return m_height;
+}
+
+xd::vec4 xd::texture::color_key() const
+{
+	return m_color_key;
 }
 
 void xd::texture::set_wrap(GLint wrap_s, GLint wrap_t)

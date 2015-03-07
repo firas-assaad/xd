@@ -3,6 +3,7 @@
 
 #include <xd/graphics/detail/image.hpp>
 
+#include <xd/glm.hpp>
 #include <xd/config.hpp>
 #include <xd/ref_counted.hpp>
 #include <boost/noncopyable.hpp>
@@ -24,6 +25,7 @@ namespace xd
 		typedef boost::intrusive_ptr<image> pt;
 
 		image(const std::string& filename);
+		image(const std::string& filename, xd::vec4 color_key);
 		virtual ~image();
 
 		void load(const std::string& filename);
@@ -33,6 +35,7 @@ namespace xd
 		int height() const { return m_height; }
 
 		std::string filename() const { return m_filename; }
+		xd::vec4 color_key() const { return m_color_key; }
 
 		void *data();
 		const void *data() const;
@@ -42,6 +45,7 @@ namespace xd
 		int m_width;
 		int m_height;
 		std::string m_filename;
+		xd::vec4 m_color_key;
 
 		void init();
 	};

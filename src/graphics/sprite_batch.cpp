@@ -112,6 +112,7 @@ void xd::sprite_batch::draw(const xd::mat4& mvp_matrix, const xd::sprite_batch::
 		// give required params to shader
 		m_data->shader->bind_uniform("vPosition", vec4(sprite.x, sprite.y, sprite.depth, 0));
 		m_data->shader->bind_uniform("vColor", sprite.color);
+		m_data->shader->bind_uniform("vColorKey", sprite.tex->color_key());
 
 		// bind the texture
 		sprite.tex->bind(GL_TEXTURE0);
@@ -175,6 +176,7 @@ void xd::sprite_batch::draw(const xd::mat4& mvp_matrix, int ticks)
 		// give required params to shader
 		m_data->shader->bind_uniform("vPosition", vec4(i->x, i->y, i->depth, 0));
 		m_data->shader->bind_uniform("vColor", i->color);
+		m_data->shader->bind_uniform("vColorKey", i->tex->color_key());
 
 		// bind the texture
 		i->tex->bind(GL_TEXTURE0);
@@ -199,32 +201,44 @@ void xd::sprite_batch::set_shader(shader_program* shader) {
 	m_data->shader.reset(shader);
 }
 
-void xd::sprite_batch::add(const xd::texture::ptr texture, float x, float y, const xd::vec4& color, const xd::vec2& origin)
+void xd::sprite_batch::add(const xd::texture::ptr texture, float x, float y,
+		const xd::vec4& color, const xd::vec2& origin)
 {
-	add(texture, rect(0, 0, texture->width(), texture->height()), x, y, 0, vec2(1, 1), color, origin);
+	add(texture, rect(0, 0, texture->width(), texture->height()), x, y, 0,
+		vec2(1, 1), color, origin);
 }
 
-void xd::sprite_batch::add(const xd::texture::ptr texture, float x, float y, float rotation, float scale, const xd::vec4& color, const xd::vec2& origin)
+void xd::sprite_batch::add(const xd::texture::ptr texture, float x, float y,
+		float rotation, float scale, const xd::vec4& color, const xd::vec2& origin)
 {
-	add(texture, rect(0, 0, texture->width(), texture->height()), x, y, rotation, vec2(scale, scale), color, origin);
+	add(texture, rect(0, 0, texture->width(), texture->height()),
+		x, y, rotation, vec2(scale, scale), color, origin);
 }
 
-void xd::sprite_batch::add(const xd::texture::ptr texture, float x, float y, float rotation, const xd::vec2& scale, const xd::vec4& color, const xd::vec2& origin)
+void xd::sprite_batch::add(const xd::texture::ptr texture, float x, float y,
+		float rotation, const xd::vec2& scale,
+		const xd::vec4& color, const xd::vec2& origin)
 {
-	add(texture, rect(0, 0, texture->width(), texture->height()), x, y, rotation, scale, color, origin);
+	add(texture, rect(0, 0, texture->width(), texture->height()),
+		x, y, rotation, scale,color, origin);
 }
 
-void xd::sprite_batch::add(const xd::texture::ptr texture, const xd::rect& src, float x, float y, const xd::vec4& color, const xd::vec2& origin)
+void xd::sprite_batch::add(const xd::texture::ptr texture, const xd::rect& src, float x, float y,
+		const xd::vec4& color, const xd::vec2& origin)
 {
 	add(texture, src, x, y, 0, vec2(1, 1), color, origin);
 }
 
-void xd::sprite_batch::add(const xd::texture::ptr texture, const xd::rect& src, float x, float y, float rotation, float scale, const xd::vec4& color, const xd::vec2& origin)
+void xd::sprite_batch::add(const xd::texture::ptr texture, const xd::rect& src,
+		float x, float y, float rotation, float scale,
+		const xd::vec4& color, const xd::vec2& origin)
 {
 	add(texture, src, x, y, rotation, vec2(scale, scale), color, origin);
 }
 
-void xd::sprite_batch::add(const xd::texture::ptr texture, const xd::rect& src, float x, float y, float rotation, const xd::vec2& scale, const xd::vec4& color, const xd::vec2& origin)
+void xd::sprite_batch::add(const xd::texture::ptr texture, const xd::rect& src,
+		float x, float y, float rotation, const xd::vec2& scale,
+		const xd::vec4& color, const xd::vec2& origin)
 {
 	detail::sprite sprite;
 	sprite.tex = texture;

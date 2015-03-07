@@ -200,10 +200,13 @@ xd::sprite_shader::sprite_shader()
 		"#version 110\n"
 		"uniform vec4 vColor;"
 		"uniform sampler2D colorMap;"
+		"uniform vec4 vColorKey;"
 		"varying vec2 vVaryingTexCoords;"
 		"void main(void)"
 		"{"
-		"	gl_FragColor = vColor * texture2D(colorMap, vVaryingTexCoords.st);"
+		"   vec4 vTexColor = texture2D(colorMap, vVaryingTexCoords.st);"
+		"   if (vColorKey.a > 0.0 && vTexColor == vColorKey) vTexColor.a = 0.0;"
+		"	gl_FragColor = vColor * vTexColor;"
 		"}";
 
 	attach(GL_VERTEX_SHADER, vertex_shader_src);

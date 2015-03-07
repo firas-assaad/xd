@@ -42,7 +42,7 @@ test::test()
 	, m_grass_texture(xd::create<xd::texture>("grass.png"))
 	, m_grass_edge_texture(xd::create<xd::texture>("grass_edge.png"))
 	, m_edge_texture(xd::create<xd::texture>("edge.png"))
-	, m_mask_texture(xd::create<xd::texture>("mask.png", GL_CLAMP, GL_CLAMP))
+	, m_mask_texture(xd::create<xd::texture>("mask.png", xd::vec4(0), GL_CLAMP, GL_CLAMP))
 	, m_hor_animating(false)
 	, m_ver_animating(false)
 	, m_hor_angle(45.0f)
@@ -261,7 +261,7 @@ void test::run()
 		// create a sprite batch
 		xd::sprite_batch sprite_batch;
 		// draw a sprite that rotates around its center (texture, x, y, rotation, scale, color, anchor)
-		sprite_batch.add(m_grass_texture, 320, 240, ticks()/1000.0f*45, 1, xd::vec4(1,1,1,1), xd::vec2(0.5,0.5));
+		sprite_batch.add(m_grass_texture, 320, 240, ticks()/1000.0f*45, 1, xd::vec4(1), xd::vec2(0.5,0.5));
 		// draw a partly transparent sprite (texture, x, y, color)
 		sprite_batch.add(m_grass_texture, 240, 240, xd::vec4(1,1,1,0.5));
 		// draw a scaled sprite that is also red (texture, x, y, rotation, scale, color)

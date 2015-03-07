@@ -16,6 +16,16 @@ namespace xd { namespace detail { namespace image {
 xd::image::image(const std::string& filename)
 	: m_width(0)
 	, m_height(0)
+	, m_color_key(0)
+{
+	init();
+	load(filename);
+}
+
+xd::image::image(const std::string& filename, xd::vec4 color_key)
+	: m_width(0)
+	, m_height(0)
+	, m_color_key(color_key)
 {
 	init();
 	load(filename);
