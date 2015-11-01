@@ -43,6 +43,8 @@ namespace xd
 		bool closed() const;
 		int width() const;
 		int height() const;
+		int framebuffer_width() const;
+		int framebuffer_height() const;
 
 		// ticks stuff
 		int ticks() const;

@@ -228,6 +228,20 @@ int xd::window::height() const
 	return height;
 }
 
+int xd::window::framebuffer_width() const
+{
+	int width;
+	glfwGetFramebufferSize(m_window, &width, nullptr);
+	return width;
+}
+
+int xd::window::framebuffer_height() const
+{
+	int height;
+	glfwGetFramebufferSize(m_window, nullptr, &height);
+	return height;
+}
+
 int xd::window::ticks() const
 {
 	return m_current_ticks;
