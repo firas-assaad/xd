@@ -82,25 +82,25 @@ namespace xd
 		};
 
 		template <typename T>
-		struct vertex_attribute_size<glm::detail::tvec1<T>>
+		struct vertex_attribute_size<glm::tvec1<T>>
 		{
 			enum { value = 1 };
 		};
 
 		template <typename T>
-		struct vertex_attribute_size<glm::detail::tvec2<T>>
+		struct vertex_attribute_size<glm::tvec2<T>>
 		{
 			enum { value = 2 };
 		};
 
 		template <typename T>
-		struct vertex_attribute_size<glm::detail::tvec3<T>>
+		struct vertex_attribute_size<glm::tvec3<T>>
 		{
 			enum { value = 3 };
 		};
 
 		template <typename T>
-		struct vertex_attribute_size<glm::detail::tvec4<T>>
+		struct vertex_attribute_size<glm::tvec4<T>>
 		{
 			enum { value = 4 };
 		};
