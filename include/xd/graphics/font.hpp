@@ -57,7 +57,15 @@ namespace xd
 		void set_color_uniform(const std::string&);
 		void set_texture_uniform(const std::string&);
 	private:
-		typedef std::unordered_map<int, std::unique_ptr<detail::font::glyph>> glyph_map_t;
+		struct int_pair_hash {
+			std::size_t operator () (const std::pair<int, int> &p) const {
+				std::size_t seed = 0;
+				seed ^= p.first + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+				seed ^= p.second + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+				return  seed;
+			}
+		};
+		typedef std::unordered_map<std::pair<int, int>, std::unique_ptr<detail::font::glyph>, int_pair_hash> glyph_map_t;
 		typedef std::unordered_map<std::string, font::ptr> font_map_t;
 		void load_size(int size);
 		const detail::font::glyph& load_glyph(utf8::uint32_t char_index, int size);

@@ -301,7 +301,7 @@ void test::run()
 		render_text.render_formatted(m_font, m_text_formatter, style, 20, 440, text);
 
 		xd::simple_text_renderer render_text2(640, 480);
-		render_text.render(m_font, xd::font_style(xd::vec4(1, 1, 1, 1), 50), 20, 320, u8"اللغة العربية");
+		render_text.render_formatted(m_font, m_text_formatter, xd::font_style(xd::vec4(1, 1, 1, 1), 50), 20, 320, u8"{color=yellow}اللغة العربية{/color}");
 
 		//xd::text_renderer render_text;
 		//render_text.render_formatted(m_font, m_text_formatter, style, m_geometry.mvp(), text);

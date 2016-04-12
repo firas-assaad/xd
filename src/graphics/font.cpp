@@ -162,7 +162,8 @@ void xd::font::load_size(int size)
 const xd::detail::font::glyph& xd::font::load_glyph(utf8::uint32_t char_index, int size)
 {
 	// check if glyph is already loaded
-	glyph_map_t::iterator i = m_glyph_map.find(char_index);
+	auto key = std::make_pair(char_index, size);
+	glyph_map_t::iterator i = m_glyph_map.find(key);
 	if (i != m_glyph_map.end())
 		return *i->second;
 
@@ -175,8 +176,8 @@ const xd::detail::font::glyph& xd::font::load_glyph(utf8::uint32_t char_index, i
 		throw glyph_load_failed(m_filename, char_index);
 
 	// create glyph
-	m_glyph_map[char_index] = std::unique_ptr<detail::font::glyph>(new detail::font::glyph);
-	detail::font::glyph& glyph = *m_glyph_map[char_index];
+	m_glyph_map[key] = std::unique_ptr<detail::font::glyph>(new detail::font::glyph);
+	detail::font::glyph& glyph = *m_glyph_map[key];
 	glyph.glyph_index = char_index;
 	glyph.advance.x = static_cast<float>(m_face->handle->glyph->advance.x >> 6);
 	glyph.advance.y = static_cast<float>(m_face->handle->glyph->advance.y >> 6);
@@ -381,6 +382,15 @@ float xd::font::get_width(const std::string& text, const font_style& style)
 		FT_Activate_Size(it->second);
 	}
 
+	// Setup harfbuzz
+	hb_buffer_add_utf8(m_face->hb_buffer, text.c_str(), text.length(), 0, text.length());
+	unsigned int glyph_count = hb_buffer_get_length(m_face->hb_buffer);
+	hb_glyph_info_t* hb_glyph_infos = hb_buffer_get_glyph_infos(m_face->hb_buffer, &glyph_count);
+	hb_buffer_set_script(m_face->hb_buffer, ucdn_get_script(hb_glyph_infos[0].codepoint));
+	hb_buffer_guess_segment_properties(m_face->hb_buffer);
+	hb_shape(m_face->hb_font, m_face->hb_buffer, NULL, 0);
+	hb_glyph_position_t *hb_glyph_positions = hb_buffer_get_glyph_positions(m_face->hb_buffer, &glyph_count);
+
 	// is kerning supported
 	FT_Bool kerning = FT_HAS_KERNING(m_face->handle);
 
@@ -388,10 +398,9 @@ float xd::font::get_width(const std::string& text, const font_style& style)
 	float width = 0;
 
 	FT_UInt prev_glyph_index = 0;
-	auto i = text.begin();
-	while (i != text.end()) {
+	for (unsigned int i = 0; i < glyph_count; ++i) {
 		// get the unicode code point
-		utf8::uint32_t char_index = utf8::next(i, text.end());
+		utf8::uint32_t char_index = hb_glyph_infos[i].codepoint;
 
 		// get the cached glyph, or cache if it is not yet cached
 		const detail::font::glyph& glyph = load_glyph(char_index, style.m_size);
@@ -400,17 +409,18 @@ float xd::font::get_width(const std::string& text, const font_style& style)
 		if (kerning && glyph.glyph_index && prev_glyph_index) {
 			FT_Vector kerning_delta;
 			FT_Get_Kerning(m_face->handle, prev_glyph_index, glyph.glyph_index, FT_KERNING_DEFAULT, &kerning_delta);
-			width += kerning_delta.x >> 6;
+			width += kerning_delta.x / 64.0f;
 		}
 		
 		// advance the position
-		width += glyph.advance.x;
+		width += hb_glyph_positions[i].x_advance / 64.0f;
 		width += style.m_letter_spacing;
 
 		// keep track of previous glyph to do kerning
 		prev_glyph_index = glyph.glyph_index;
 	}
 
+	hb_buffer_clear_contents(m_face->hb_buffer);
 	return width;
 }
 
