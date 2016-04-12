@@ -1,4 +1,4 @@
-#include <xd/factory.hpp>
+﻿#include <xd/factory.hpp>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -37,12 +37,12 @@ test::test()
 	: xd::window("3D Isometric Sample", 640, 480)
 	, m_grass_batch(GL_QUADS)
 	, m_edge_batch(GL_QUADS)
-	, m_font(xd::create<xd::font>("verdanab.ttf"))
+	, m_font(xd::create<xd::font>("dataxd/arial.ttf"))
 	, m_text_formatter(xd::create<xd::stock_text_formatter>())
-	, m_grass_texture(xd::create<xd::texture>("grass.png"))
-	, m_grass_edge_texture(xd::create<xd::texture>("grass_edge.png"))
-	, m_edge_texture(xd::create<xd::texture>("edge.png"))
-	, m_mask_texture(xd::create<xd::texture>("mask.png", xd::vec4(0), GL_CLAMP, GL_CLAMP))
+	, m_grass_texture(xd::create<xd::texture>("dataxd/grass.png"))
+	, m_grass_edge_texture(xd::create<xd::texture>("dataxd/grass_edge.png"))
+	, m_edge_texture(xd::create<xd::texture>("dataxd/edge.png"))
+	, m_mask_texture(xd::create<xd::texture>("dataxd/mask.png", xd::vec4(0), GL_CLAMP, GL_CLAMP))
 	, m_hor_animating(false)
 	, m_ver_animating(false)
 	, m_hor_angle(45.0f)
@@ -299,6 +299,9 @@ void test::run()
 		auto style = xd::font_style(xd::vec4(1,1,1,1), 24).shadow(2, -2, xd::vec4(0,0,0,1));
 		auto text = "{wave}Hello there {color=yellow}skauert{/color}!{/wave}";
 		render_text.render_formatted(m_font, m_text_formatter, style, 20, 440, text);
+
+		xd::simple_text_renderer render_text2(640, 480);
+		render_text.render(m_font, xd::font_style(xd::vec4(1, 1, 1, 1), 50), 20, 320, u8"اللغة العربية");
 
 		//xd::text_renderer render_text;
 		//render_text.render_formatted(m_font, m_text_formatter, style, m_geometry.mvp(), text);

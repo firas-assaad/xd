@@ -169,7 +169,7 @@ int main(int argc, char *argv[])
     //return 0;
 
     try {
-        auto song = xd::create<xd::music>("song.ogg");
+        auto song = xd::create<xd::music>("dataxd/song.ogg");
         song->play();
         song->set_volume(50);
 

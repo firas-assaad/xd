@@ -5,6 +5,9 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_SIZES_H
+#include <harfbuzz/hb.h>
+#include <harfbuzz/hb-ft.h>
+#include <xd/vendor/unicode_data.hpp>
 #include <memory>
 #include <map>
 #include <memory>
@@ -65,7 +68,24 @@ namespace xd { namespace detail { namespace font {
 
 	struct face
 	{
+		face(FT_Face f) : handle(f) {
+			hb_font = hb_ft_font_create(handle, 0);
+			hb_buffer = hb_buffer_create();
+			hb_buffer_set_content_type(hb_buffer, HB_BUFFER_CONTENT_TYPE_UNICODE);
+		}
+		~face() {
+			hb_buffer_destroy(hb_buffer);
+			hb_font_destroy(hb_font);
+			// free font sizes
+			for (auto& i : sizes) {
+				FT_Done_Size(i.second);
+			}
+			// free the font handle
+			FT_Done_Face(handle);
+		}
 		FT_Face handle;
+		hb_font_t* hb_font;
+		hb_buffer_t* hb_buffer;
 		std::map<int, FT_Size> sizes;
 	};
 
@@ -80,11 +100,11 @@ xd::font::font(const std::string& filename)
 {
 	int error;
 
-	// construct a new font face; make sure it gets deleted if exception is thrown
-	m_face = std::unique_ptr<detail::font::face>(new detail::font::face);
-
+	FT_Face handle = nullptr;
 	// load the font
-	error = FT_New_Face(detail::font::library, filename.c_str(), 0, &m_face->handle);
+	error = FT_New_Face(detail::font::library, filename.c_str(), 0, &handle);
+	// construct a new font face; make sure it gets deleted if exception is thrown
+	m_face = std::make_unique<detail::font::face>(handle);
 	if (error)
 		throw font_load_failed(filename);
 }
@@ -95,12 +115,6 @@ xd::font::~font()
 	for (auto i = m_glyph_map.begin(); i != m_glyph_map.end(); ++i) {
 		glDeleteTextures(1, &i->second->texture_id);
 	}
-	// free font sizes
-	for (auto i = m_face->sizes.begin(); i != m_face->sizes.end(); ++i) {
-		FT_Done_Size(i->second);
-	}
-	// free the font handle
-	FT_Done_Face(m_face->handle);
 }
 
 void xd::font::link_font(const std::string& type, const std::string& filename)
@@ -152,8 +166,7 @@ const xd::detail::font::glyph& xd::font::load_glyph(utf8::uint32_t char_index, i
 	if (i != m_glyph_map.end())
 		return *i->second;
 
-	FT_UInt glyph_index = FT_Get_Char_Index(m_face->handle, char_index);
-	int error = FT_Load_Glyph(m_face->handle, glyph_index, FT_LOAD_DEFAULT);
+	int error = FT_Load_Glyph(m_face->handle, char_index, FT_LOAD_DEFAULT);
 	if (error)
 		throw glyph_load_failed(m_filename, char_index);
 
@@ -164,7 +177,7 @@ const xd::detail::font::glyph& xd::font::load_glyph(utf8::uint32_t char_index, i
 	// create glyph
 	m_glyph_map[char_index] = std::unique_ptr<detail::font::glyph>(new detail::font::glyph);
 	detail::font::glyph& glyph = *m_glyph_map[char_index];
-	glyph.glyph_index = glyph_index;
+	glyph.glyph_index = char_index;
 	glyph.advance.x = static_cast<float>(m_face->handle->glyph->advance.x >> 6);
 	glyph.advance.y = static_cast<float>(m_face->handle->glyph->advance.y >> 6);
 
@@ -195,7 +208,7 @@ const xd::detail::font::glyph& xd::font::load_glyph(utf8::uint32_t char_index, i
 	glyph.quad_ptr = detail::font::vertex_batch_ptr_t(new detail::font::vertex_batch_t(GL_QUADS));
 	glyph.quad_ptr->load(data, 4);
 	glyph.offset.x = static_cast<float>(m_face->handle->glyph->bitmap_left);
-	glyph.offset.y = static_cast<float>(m_face->handle->glyph->bitmap_top - bitmap.rows);
+	glyph.offset.y = static_cast<float>(m_face->handle->glyph->bitmap_top - (int)bitmap.rows);
 
 	return glyph;
 }
@@ -224,6 +237,15 @@ void xd::font::render(const std::string& text, const font_style& style,
 		FT_Activate_Size(it->second);
 	}
 
+	// Setup harfbuzz
+	hb_buffer_add_utf8(m_face->hb_buffer, text.c_str(), text.length(), 0, text.length());
+	unsigned int glyph_count = hb_buffer_get_length(m_face->hb_buffer);
+	hb_glyph_info_t* hb_glyph_infos = hb_buffer_get_glyph_infos(m_face->hb_buffer, &glyph_count);
+	hb_buffer_set_script(m_face->hb_buffer, ucdn_get_script(hb_glyph_infos[0].codepoint));
+	hb_buffer_guess_segment_properties(m_face->hb_buffer);
+	hb_shape(m_face->hb_font, m_face->hb_buffer, NULL, 0);
+	hb_glyph_position_t *hb_glyph_positions = hb_buffer_get_glyph_positions(m_face->hb_buffer, &glyph_count);
+
 	// bind to first texture unit
 	glActiveTexture(GL_TEXTURE0);
 
@@ -242,10 +264,10 @@ void xd::font::render(const std::string& text, const font_style& style,
 		text_pos = *pos;
 
 	FT_UInt prev_glyph_index = 0;
-	auto i = text.begin();
-	while (i != text.end()) {
+
+	for (unsigned int i = 0; i < glyph_count; ++i) {
 		// get the unicode code point
-		utf8::uint32_t char_index = utf8::next(i, text.end());
+		utf8::uint32_t char_index = hb_glyph_infos[i].codepoint;
 
 		// get the cached glyph, or cache if it is not yet cached
 		const detail::font::glyph& glyph = load_glyph(char_index, style.m_size);
@@ -257,13 +279,14 @@ void xd::font::render(const std::string& text, const font_style& style,
 		if (kerning && glyph.glyph_index && prev_glyph_index) {
 			FT_Vector kerning_delta;
 			FT_Get_Kerning(m_face->handle, prev_glyph_index, glyph.glyph_index, FT_KERNING_DEFAULT, &kerning_delta);
-			text_pos.x += kerning_delta.x >> 6;
+			text_pos.x += kerning_delta.x / 64.0f;
 		}
 
 		// calculate exact offset
+		auto& hb_glyph_pos = hb_glyph_positions[i];
 		glm::vec2 glyph_pos = text_pos;
-		glyph_pos.x += glyph.offset.x;
-		glyph_pos.y += glyph.offset.y;
+		glyph_pos.x += (hb_glyph_pos.x_offset / 64.0f) + glyph.offset.x;
+		glyph_pos.y -= (hb_glyph_pos.y_offset / 64.0f) - glyph.offset.y;
 
 		// add optional letter spacing
 		glyph_pos.x += style.m_letter_spacing/2;
@@ -320,12 +343,16 @@ void xd::font::render(const std::string& text, const font_style& style,
 		glyph.quad_ptr->render();
 		
 		// advance the position
-		text_pos += glyph.advance;
+		text_pos.x += hb_glyph_pos.x_advance / 64.0f;
+		text_pos.y -= hb_glyph_pos.y_advance / 64.0f;
 		text_pos.x += style.m_letter_spacing;
 
 		// keep track of previous glyph to do kerning
 		prev_glyph_index = glyph.glyph_index;
 	}
+
+	// Clear buffer
+	hb_buffer_clear_contents(m_face->hb_buffer);
 
 	// give back the updated coords
 	if (pos)
