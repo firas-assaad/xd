@@ -215,7 +215,8 @@ const xd::detail::font::glyph& xd::font::load_glyph(utf8::uint32_t char_index, i
 }
 
 void xd::font::render(const std::string& text, const font_style& style,
-	xd::shader_program::ptr shader, const glm::mat4& mvp, glm::vec2 *pos)
+	xd::shader_program::ptr shader, const glm::mat4& mvp, glm::vec2 *pos,
+	bool actual_rendering)
 {
 	// check if we're rendering using this font or a linked font
 	if (style.m_type && style.m_type->length() != 0) {
@@ -247,109 +248,114 @@ void xd::font::render(const std::string& text, const font_style& style,
 	hb_shape(m_face->hb_font, m_face->hb_buffer, NULL, 0);
 	hb_glyph_position_t *hb_glyph_positions = hb_buffer_get_glyph_positions(m_face->hb_buffer, &glyph_count);
 
-	// bind to first texture unit
-	glActiveTexture(GL_TEXTURE0);
-
-	// setup the shader
-	shader->use();
-	shader->bind_uniform(m_mvp_uniform, mvp);
-	shader->bind_uniform(m_color_uniform, style.m_color);
-	shader->bind_uniform(m_texture_uniform, 0);
-
 	// is kerning supported
 	FT_Bool kerning = FT_HAS_KERNING(m_face->handle);
+
+	if (actual_rendering) {
+		// bind to first texture unit
+		glActiveTexture(GL_TEXTURE0);
+
+		// setup the shader
+		shader->use();
+		shader->bind_uniform(m_mvp_uniform, mvp);
+		shader->bind_uniform(m_color_uniform, style.m_color);
+		shader->bind_uniform(m_texture_uniform, 0);
+	}
 
 	// render each glyph in the string
 	glm::vec2 text_pos;
 	if (pos)
 		text_pos = *pos;
-
-	FT_UInt prev_glyph_index = 0;
+	float width = 0;
+	FT_UInt prev_codepoint = 0;
 
 	for (unsigned int i = 0; i < glyph_count; ++i) {
 		// get the unicode code point
-		utf8::uint32_t char_index = hb_glyph_infos[i].codepoint;
-
-		// get the cached glyph, or cache if it is not yet cached
-		const detail::font::glyph& glyph = load_glyph(char_index, style.m_size);
-
-		// bind the texture
-		glBindTexture(GL_TEXTURE_2D, glyph.texture_id);
+		utf8::uint32_t codepoint = hb_glyph_infos[i].codepoint;
 
 		// check for kerning
-		if (kerning && glyph.glyph_index && prev_glyph_index) {
+		if (kerning && codepoint && prev_codepoint) {
 			FT_Vector kerning_delta;
-			FT_Get_Kerning(m_face->handle, prev_glyph_index, glyph.glyph_index, FT_KERNING_DEFAULT, &kerning_delta);
+			FT_Get_Kerning(m_face->handle, prev_codepoint, codepoint, FT_KERNING_DEFAULT, &kerning_delta);
 			text_pos.x += kerning_delta.x / 64.0f;
 		}
 
-		// calculate exact offset
 		auto& hb_glyph_pos = hb_glyph_positions[i];
-		glm::vec2 glyph_pos = text_pos;
-		glyph_pos.x += (hb_glyph_pos.x_offset / 64.0f) + glyph.offset.x;
-		glyph_pos.y -= (hb_glyph_pos.y_offset / 64.0f) - glyph.offset.y;
 
-		// add optional letter spacing
-		glyph_pos.x += style.m_letter_spacing/2;
+		if (actual_rendering) {
+			// get the cached glyph, or cache if it is not yet cached
+			const detail::font::glyph& glyph = load_glyph(codepoint, style.m_size);
 
-		// if shadow is enabled, draw the shadow first
-		if (style.m_shadow) {
-			// calculate shadow position
-			glm::vec2 shadow_pos = glyph_pos;
-			shadow_pos.x += style.m_shadow->x;
-			shadow_pos.y += style.m_shadow->y;
+			// bind the texture
+			glBindTexture(GL_TEXTURE_2D, glyph.texture_id);
 
-			// calculate shadow color
-			glm::vec4 shadow_color = style.m_shadow->color;
-			shadow_color.a *= style.m_color.a;
+			// calculate exact offset
+			glm::vec2 glyph_pos = text_pos;
+			glyph_pos.x += (hb_glyph_pos.x_offset / 64.0f) + glyph.offset.x;
+			glyph_pos.y -= (hb_glyph_pos.y_offset / 64.0f) - glyph.offset.y;
 
-			// bind uniforms
-			shader->bind_uniform(m_color_uniform, shadow_color);
-			shader->bind_uniform(m_position_uniform, shadow_pos);
+			// add optional letter spacing
+			glyph_pos.x += style.m_letter_spacing / 2;
 
-			// draw shadow
-			glyph.quad_ptr->render();
+			// if shadow is enabled, draw the shadow first
+			if (style.m_shadow) {
+				// calculate shadow position
+				glm::vec2 shadow_pos = glyph_pos;
+				shadow_pos.x += style.m_shadow->x;
+				shadow_pos.y += style.m_shadow->y;
 
-			// restore the text color
-			shader->bind_uniform(m_color_uniform, style.m_color);
-		}
-		
-		// if outline is enabled, draw outline
-		if (style.m_outline) {
-			// calculate outline color
-			glm::vec4 outline_color = style.m_outline->color;
-			outline_color.a *= style.m_color.a;
+				// calculate shadow color
+				glm::vec4 shadow_color = style.m_shadow->color;
+				shadow_color.a *= style.m_color.a;
 
-			// bind color
-			shader->bind_uniform(m_color_uniform, outline_color);
+				// bind uniforms
+				shader->bind_uniform(m_color_uniform, shadow_color);
+				shader->bind_uniform(m_position_uniform, shadow_pos);
 
-			// draw font multiple times times to draw outline (EXPENSIVE!)
-			for (int x = -style.m_outline->width; x <= style.m_outline->width; x++) {
-				for (int y = -style.m_outline->width; y <= style.m_outline->width; y++) {
-					if (x == 0 && y == 0)
-						continue;
-					shader->bind_uniform(m_position_uniform, glyph_pos + glm::vec2(x, y));
-					glyph.quad_ptr->render();
-				}
+				// draw shadow
+				glyph.quad_ptr->render();
+
+				// restore the text color
+				shader->bind_uniform(m_color_uniform, style.m_color);
 			}
 
-			// restore the text color
-			shader->bind_uniform(m_color_uniform, style.m_color);
+			// if outline is enabled, draw outline
+			if (style.m_outline) {
+				// calculate outline color
+				glm::vec4 outline_color = style.m_outline->color;
+				outline_color.a *= style.m_color.a;
+
+				// bind color
+				shader->bind_uniform(m_color_uniform, outline_color);
+
+				// draw font multiple times times to draw outline (EXPENSIVE!)
+				for (int x = -style.m_outline->width; x <= style.m_outline->width; x++) {
+					for (int y = -style.m_outline->width; y <= style.m_outline->width; y++) {
+						if (x == 0 && y == 0)
+							continue;
+						shader->bind_uniform(m_position_uniform, glyph_pos + glm::vec2(x, y));
+						glyph.quad_ptr->render();
+					}
+				}
+
+				// restore the text color
+				shader->bind_uniform(m_color_uniform, style.m_color);
+			}
+
+			// bind uniforms
+			shader->bind_uniform(m_position_uniform, glyph_pos);
+
+			// draw the glyph
+			glyph.quad_ptr->render();
 		}
 
-		// bind uniforms
-		shader->bind_uniform(m_position_uniform, glyph_pos);
-
-		// draw the glyph
-		glyph.quad_ptr->render();
-		
 		// advance the position
 		text_pos.x += hb_glyph_pos.x_advance / 64.0f;
 		text_pos.y -= hb_glyph_pos.y_advance / 64.0f;
 		text_pos.x += style.m_letter_spacing;
 
 		// keep track of previous glyph to do kerning
-		prev_glyph_index = glyph.glyph_index;
+		prev_codepoint = codepoint;
 	}
 
 	// Clear buffer
@@ -362,66 +368,9 @@ void xd::font::render(const std::string& text, const font_style& style,
 
 float xd::font::get_width(const std::string& text, const font_style& style)
 {
-	// check if we're rendering using this font or a linked font
-	if (style.m_type && style.m_type->length() != 0) {
-		font_map_t::iterator i = m_linked_fonts.find(*style.m_type);
-		if (i == m_linked_fonts.end())
-			throw invalid_font_type(*style.m_type);
-		font_style linked_style = style;
-		linked_style.m_type = boost::none;
-		return i->second->get_width(text, linked_style);
-	}
-
-	// check if the font size is already loaded
-	auto it = m_face->sizes.find(style.m_size);
-	if (it == m_face->sizes.end()) {
-		// load the size
-		load_size(style.m_size);
-	} else {
-		// activate the size
-		FT_Activate_Size(it->second);
-	}
-
-	// Setup harfbuzz
-	hb_buffer_add_utf8(m_face->hb_buffer, text.c_str(), text.length(), 0, text.length());
-	unsigned int glyph_count = hb_buffer_get_length(m_face->hb_buffer);
-	hb_glyph_info_t* hb_glyph_infos = hb_buffer_get_glyph_infos(m_face->hb_buffer, &glyph_count);
-	hb_buffer_set_script(m_face->hb_buffer, ucdn_get_script(hb_glyph_infos[0].codepoint));
-	hb_buffer_guess_segment_properties(m_face->hb_buffer);
-	hb_shape(m_face->hb_font, m_face->hb_buffer, NULL, 0);
-	hb_glyph_position_t *hb_glyph_positions = hb_buffer_get_glyph_positions(m_face->hb_buffer, &glyph_count);
-
-	// is kerning supported
-	FT_Bool kerning = FT_HAS_KERNING(m_face->handle);
-
-	// render each glyph in the string
-	float width = 0;
-
-	FT_UInt prev_glyph_index = 0;
-	for (unsigned int i = 0; i < glyph_count; ++i) {
-		// get the unicode code point
-		utf8::uint32_t char_index = hb_glyph_infos[i].codepoint;
-
-		// get the cached glyph, or cache if it is not yet cached
-		const detail::font::glyph& glyph = load_glyph(char_index, style.m_size);
-
-		// check for kerning
-		if (kerning && glyph.glyph_index && prev_glyph_index) {
-			FT_Vector kerning_delta;
-			FT_Get_Kerning(m_face->handle, prev_glyph_index, glyph.glyph_index, FT_KERNING_DEFAULT, &kerning_delta);
-			width += kerning_delta.x / 64.0f;
-		}
-		
-		// advance the position
-		width += hb_glyph_positions[i].x_advance / 64.0f;
-		width += style.m_letter_spacing;
-
-		// keep track of previous glyph to do kerning
-		prev_glyph_index = glyph.glyph_index;
-	}
-
-	hb_buffer_clear_contents(m_face->hb_buffer);
-	return width;
+	glm::vec2 pos(0.0f, 0.0f);
+	render(text, style, nullptr, glm::mat4(), &pos, false);
+	return pos.x;
 }
 
 const std::string& xd::font::get_mvp_uniform()

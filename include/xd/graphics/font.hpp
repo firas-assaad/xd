@@ -43,7 +43,8 @@ namespace xd
 		void unlink_font(const std::string& type);
 
 		void render(const std::string& text, const font_style& style,
-			shader_program::ptr shader, const glm::mat4& mvp, glm::vec2 *pos = 0);
+			shader_program::ptr shader, const glm::mat4& mvp,
+			glm::vec2 *pos = 0, bool actual_rendering = true);
 
 		float get_width(const std::string& text, const font_style& style);
 
