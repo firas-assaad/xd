@@ -133,7 +133,7 @@ void xd::font::unlink_font(const std::string& type)
 	m_linked_fonts.erase(type);
 }
 
-void xd::font::load_size(int size)
+void xd::font::load_size(int size, int load_flags)
 {
 	// create a new size
 	FT_Size font_size;
@@ -148,7 +148,7 @@ void xd::font::load_size(int size)
 			throw font_load_failed(m_filename);
 		// pre-load 7-bit ASCII glyphs
 		for (int i = 0; i < 128; i++) {
-			load_glyph(i, size);
+			load_glyph(i, size, load_flags);
 		}
 	} catch (...) {
 		// free the size and re-throw
@@ -159,7 +159,7 @@ void xd::font::load_size(int size)
 	m_face->sizes.insert(std::make_pair(size, font_size));
 }
 
-const xd::detail::font::glyph& xd::font::load_glyph(utf8::uint32_t char_index, int size)
+const xd::detail::font::glyph& xd::font::load_glyph(utf8::uint32_t char_index, int size, int load_flags)
 {
 	// check if glyph is already loaded
 	auto key = std::make_pair(char_index, size);
@@ -167,7 +167,7 @@ const xd::detail::font::glyph& xd::font::load_glyph(utf8::uint32_t char_index, i
 	if (i != m_glyph_map.end())
 		return *i->second;
 
-	int error = FT_Load_Glyph(m_face->handle, char_index, FT_LOAD_DEFAULT);
+	int error = FT_Load_Glyph(m_face->handle, char_index, load_flags);
 	if (error)
 		throw glyph_load_failed(m_filename, char_index);
 
@@ -218,6 +218,7 @@ void xd::font::render(const std::string& text, const font_style& style,
 	xd::shader_program::ptr shader, const glm::mat4& mvp, glm::vec2 *pos,
 	bool actual_rendering)
 {
+	int load_flags = style.m_force_autohint ? FT_LOAD_FORCE_AUTOHINT : FT_LOAD_DEFAULT;
 	// check if we're rendering using this font or a linked font
 	if (style.m_type && style.m_type->length() != 0) {
 		font_map_t::iterator i = m_linked_fonts.find(*style.m_type);
@@ -233,7 +234,7 @@ void xd::font::render(const std::string& text, const font_style& style,
 	auto it = m_face->sizes.find(style.m_size);
 	if (it == m_face->sizes.end()) {
 		// load the size
-		load_size(style.m_size);
+		load_size(style.m_size, load_flags);
 	} else {
 		// activate the size
 		FT_Activate_Size(it->second);
@@ -284,7 +285,7 @@ void xd::font::render(const std::string& text, const font_style& style,
 
 		if (actual_rendering) {
 			// get the cached glyph, or cache if it is not yet cached
-			const detail::font::glyph& glyph = load_glyph(codepoint, style.m_size);
+			const detail::font::glyph& glyph = load_glyph(codepoint, style.m_size, load_flags);
 
 			// bind the texture
 			glBindTexture(GL_TEXTURE_2D, glyph.texture_id);

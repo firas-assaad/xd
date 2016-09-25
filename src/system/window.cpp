@@ -66,7 +66,7 @@ xd::window::window(const std::string& title, int width, int height, const window
 		throw xd::window_creation_failed();
 	}
 
-	glfwSwapInterval(1);
+	glfwSwapInterval(options.vsync);
 
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClearDepth(1.0f);

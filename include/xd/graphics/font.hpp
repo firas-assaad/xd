@@ -68,8 +68,8 @@ namespace xd
 		};
 		typedef std::unordered_map<std::pair<int, int>, std::unique_ptr<detail::font::glyph>, int_pair_hash> glyph_map_t;
 		typedef std::unordered_map<std::string, font::ptr> font_map_t;
-		void load_size(int size);
-		const detail::font::glyph& load_glyph(utf8::uint32_t char_index, int size);
+		void load_size(int size, int load_flags);
+		const detail::font::glyph& load_glyph(utf8::uint32_t char_index, int size, int load_flags);
 
 		std::unique_ptr<detail::font::face> m_face;
 		std::string m_filename;

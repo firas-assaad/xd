@@ -38,6 +38,7 @@ namespace xd
 			, m_size(size)
 			, m_letter_spacing(0)
 			, m_line_height(0)
+			, m_force_autohint(false)
 		{
 		}
 
@@ -46,18 +47,21 @@ namespace xd
 		font_style& size(int size) { m_size = size; return *this; }
 		font_style& letter_spacing(float letter_spacing) { m_letter_spacing = letter_spacing; return *this; }
 		font_style& line_height(float line_height) { m_line_height = line_height; return *this; }
+		font_style& force_autohint(bool force_autohint) { m_force_autohint = force_autohint; return *this; }
 
 		// getters for required styles
 		vec4 color() const { return m_color; }
 		int size() const { return m_size; }
 		float letter_spacing() const { return m_letter_spacing; }
 		float line_height() const { return m_line_height; }
+		bool force_autohint() const { return m_force_autohint; }
 
 		// modifiable getters for required styles
 		vec4& color() { return m_color; }
 		int& size() { return m_size; }
 		float& letter_spacing() { return m_letter_spacing; }
 		float& line_height() { return m_line_height; }
+		bool& force_autohint() { return m_force_autohint;  }
 
 		// setters for optional styles
 		font_style& type(const std::string& type) { m_type = type; return *this; }
@@ -129,6 +133,7 @@ namespace xd
 		int m_size;
 		float m_letter_spacing;
 		float m_line_height;
+		bool m_force_autohint;
 
 		// optional styles
 		boost::optional<std::string> m_type;
