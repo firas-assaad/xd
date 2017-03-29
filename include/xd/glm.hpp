@@ -7,6 +7,7 @@
 
 namespace xd
 {
+    // Brought in individually to avoid conflicts (e.g. QT)
 	using glm::vec2;
 	using glm::vec3;
 	using glm::vec4;
@@ -23,6 +24,45 @@ namespace xd
 	using glm::length;
 	using glm::ortho;
 	using glm::perspective;
+    using glm::radians;
+    using glm::degrees;
+    using glm::sin;
+    using glm::cos;
+    using glm::tan;
+    using glm::sinh;
+    using glm::cosh;
+    using glm::tanh;
+    using glm::asin;
+    using glm::acos;
+    using glm::atan;
+    using glm::asinh;
+    using glm::acosh;
+    using glm::atanh;
+    using glm::abs;
+    using glm::ceil;
+    using glm::clamp;
+    using glm::floatBitsToInt;
+    using glm::floatBitsToUint;
+    using glm::floor;
+    using glm::fma;
+    using glm::fract;
+    using glm::frexp;
+    using glm::intBitsToFloat;
+    using glm::isinf;
+    using glm::isnan;
+    using glm::ldexp;
+    using glm::max;
+    using glm::min;
+    using glm::mix;
+    using glm::mod;
+    using glm::modf;
+    using glm::round;
+    using glm::roundEven;
+    using glm::sign;
+    using glm::smoothstep;
+    using glm::step;
+    using glm::trunc;
+    using glm::uintBitsToFloat;
 }
 
 #endif
