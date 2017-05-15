@@ -22,5 +22,6 @@
 #include <xd/graphics/sprite_batch.hpp>
 #include <xd/graphics/text_renderer.hpp>
 #include <xd/graphics/simple_text_renderer.hpp>
+#include <xd/graphics/framebuffer.hpp>
 
 #endif
