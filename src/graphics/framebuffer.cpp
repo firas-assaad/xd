@@ -33,7 +33,9 @@ void xd::framebuffer::attach_color_texture(xd::texture::ptr texture, int slot) c
 
 	bind();
 
-	glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT + slot,
+	auto attachment = static_cast<GLenum>(GL_COLOR_ATTACHMENT0_EXT + slot);
+
+	glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, attachment,
 		GL_TEXTURE_2D, texture->texture_id(), 0);
 
 	GLenum error = glGetError();
@@ -41,7 +43,7 @@ void xd::framebuffer::attach_color_texture(xd::texture::ptr texture, int slot) c
 		throw std::exception("Could not attach texture to framebuffer object");
 	}
 
-	GLenum draw_buffers[1] = { GL_COLOR_ATTACHMENT0_EXT + slot };
+	GLenum draw_buffers[1] = { attachment };
 	glDrawBuffers(1, draw_buffers);
 }
 

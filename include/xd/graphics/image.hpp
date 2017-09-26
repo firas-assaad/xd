@@ -29,7 +29,6 @@ namespace xd
 		virtual ~image();
 
 		void load(const std::string& filename);
-		void save(const std::string& filename) const;
 
 		int width() const { return m_width; }
 		int height() const { return m_height; }
@@ -46,8 +45,6 @@ namespace xd
 		int m_height;
 		std::string m_filename;
 		xd::vec4 m_color_key;
-
-		void init();
 	};
 }
 

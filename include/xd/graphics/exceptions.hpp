@@ -90,8 +90,8 @@ namespace xd
 
 	struct failed_to_load_image : exception
 	{
-		failed_to_load_image(const std::string& filename)
-			: exception("failed to load image: "+filename)
+		failed_to_load_image(const std::string& filename, const std::string& reason)
+			: exception("failed to load image '" + filename + "': " + reason)
 		{
 		}
 	};

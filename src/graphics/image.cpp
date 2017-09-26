@@ -1,87 +1,62 @@
-#include <IL/il.h>
+#define STB_IMAGE_IMPLEMENTATION
+#define STBI_NO_PSD
+#define STBI_NO_TGA
+#define STBI_NO_HDR
+#define STBI_NO_PIC
+#define STBI_NO_PNM
+#define STBI_FAILURE_USERMSG // readable error messages
+#include <xd/vendor/stb/stb_image.h>
 #include <xd/graphics/exceptions.hpp>
 #include <xd/graphics/image.hpp>
 
 namespace xd { namespace detail { namespace image {
 
-	bool initialized = false;
-
 	struct handle
 	{
-		ILuint image_id;
+		void* data = nullptr;
 	};
 
 } } }
 
 xd::image::image(const std::string& filename)
-	: m_width(0)
-	, m_height(0)
-	, m_color_key(0)
+	: image(filename, xd::vec4(0))
 {
-	init();
-	load(filename);
 }
 
 xd::image::image(const std::string& filename, xd::vec4 color_key)
 	: m_width(0)
 	, m_height(0)
 	, m_color_key(color_key)
+	, m_image(detail::image::handle_ptr(new detail::image::handle))
 {
-	init();
 	load(filename);
-}
-
-void xd::image::init()
-{
-	if (!detail::image::initialized) {
-		ilInit();
-		ilEnable(IL_ORIGIN_SET);
-		ilSetInteger(IL_ORIGIN_MODE, IL_ORIGIN_UPPER_LEFT);
-		detail::image::initialized = true;
-	}
-
-	m_image = detail::image::handle_ptr(new detail::image::handle);
-	ilGenImages(1, &m_image->image_id);
 }
 
 xd::image::~image()
 {
-	ilDeleteImages(1, &m_image->image_id);
+	stbi_image_free(m_image->data);
 }
 
 void xd::image::load(const std::string& filename)
 {
-	// bind and load the image
-	ilBindImage(m_image->image_id);
-	if (ilLoadImage(filename.c_str()) == IL_FALSE)
-		throw failed_to_load_image(filename);
+	if (m_image->data)
+		stbi_image_free(m_image->data);
 
-	// set width and height
-	m_width = ilGetInteger(IL_IMAGE_WIDTH);
-	m_height = ilGetInteger(IL_IMAGE_HEIGHT);
+	int channels;
+	m_image->data = stbi_load(filename.c_str(), &m_width, &m_height, &channels, 4);
 
-	// convert image to RGBA
-	ilConvertImage(IL_RGBA, IL_UNSIGNED_BYTE);
+	if (!m_image->data)
+		throw failed_to_load_image(filename, stbi_failure_reason());
+
 	m_filename = filename;
-}
-
-void xd::image::save(const std::string& filename) const
-{
-	// bind image
-	ilBindImage(m_image->image_id);
-
-	// save image
-	ilSaveImage(filename.c_str());
 }
 
 void *xd::image::data()
 {
-	ilBindImage(m_image->image_id);
-	return ilGetData();
+	return m_image->data;
 }
 
 const void *xd::image::data() const
 {
-	ilBindImage(m_image->image_id);
-	return ilGetData();
+	return m_image->data;
 }
