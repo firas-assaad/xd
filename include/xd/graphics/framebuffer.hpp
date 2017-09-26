@@ -24,18 +24,20 @@ namespace xd
 		void unbind() const;
 
 		void attach_color_texture(xd::texture::ptr texture, int slot) const;
-		void attach_depth_texture(xd::texture::ptr texture) const;
+		void attach_depth_buffer(unsigned int id) const;
 
 		static bool extension_supported() {
 			return GLEW_EXT_framebuffer_object;
+		}
+
+		GLuint framebuffer_id() const {
+			return m_buffer_id;
 		}
 
 		std::tuple<bool, std::string> check_complete() const;
 
 	private:
 		GLuint m_buffer_id;
-
-		void attach_texture(xd::texture::ptr texture, int slot, bool is_depth) const;
 	};
 
 }

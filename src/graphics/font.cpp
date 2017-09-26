@@ -218,7 +218,7 @@ void xd::font::render(const std::string& text, const font_style& style,
 	xd::shader_program::ptr shader, const glm::mat4& mvp, glm::vec2 *pos,
 	bool actual_rendering)
 {
-	int load_flags = style.m_force_autohint ? FT_LOAD_FORCE_AUTOHINT : FT_LOAD_DEFAULT;
+	int load_flags = style.m_force_autohint ? FT_LOAD_FORCE_AUTOHINT : FT_LOAD_NO_HINTING;
 	// check if we're rendering using this font or a linked font
 	if (style.m_type && style.m_type->length() != 0) {
 		font_map_t::iterator i = m_linked_fonts.find(*style.m_type);

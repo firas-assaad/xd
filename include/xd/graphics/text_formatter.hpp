@@ -204,6 +204,7 @@ namespace xd
 		void push_outline(const font_outline& outline);
 		void push_position(const glm::vec2& position);
 		void push_letter_spacing(float letter_spacing);
+		void push_force_autohint(bool force_autohint);
 
 		void pop_color();
 		void pop_alpha();
@@ -213,6 +214,7 @@ namespace xd
 		void pop_outline();
 		void pop_position();
 		void pop_letter_spacing();
+		void pop_force_autohint();
 
 		template <typename T>
 		void push_text(const T& val)

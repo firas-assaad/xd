@@ -28,27 +28,12 @@ void xd::framebuffer::unbind() const
 
 void xd::framebuffer::attach_color_texture(xd::texture::ptr texture, int slot) const
 {
-	attach_texture(texture, slot, false);
-}
-
-void xd::framebuffer::attach_depth_texture(xd::texture::ptr texture) const
-{
-	attach_texture(texture, 0, true);
-}
-
-void xd::framebuffer::attach_texture(xd::texture::ptr texture, int slot, bool is_depth) const
-{
 	if (!extension_supported())
 		return;
-	GLenum attachment;
-	if (is_depth)
-		attachment = GL_DEPTH_ATTACHMENT_EXT;
-	else
-		attachment = GL_COLOR_ATTACHMENT0_EXT + slot;
 
 	bind();
 
-	glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, attachment,
+	glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT + slot,
 		GL_TEXTURE_2D, texture->texture_id(), 0);
 
 	GLenum error = glGetError();
@@ -60,6 +45,21 @@ void xd::framebuffer::attach_texture(xd::texture::ptr texture, int slot, bool is
 	glDrawBuffers(1, draw_buffers);
 }
 
+void xd::framebuffer::attach_depth_buffer(unsigned int id) const
+{
+	if (!extension_supported())
+		return;
+
+	bind();
+
+	glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, 
+		GL_RENDERBUFFER_EXT, id);
+
+	GLenum error = glGetError();
+	if (error == GL_INVALID_OPERATION) {
+		throw std::exception("Could not attach depth buffer to framebuffer object");
+	}
+}
 
 std::tuple<bool, std::string> xd::framebuffer::check_complete() const
 {

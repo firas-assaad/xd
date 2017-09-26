@@ -13,6 +13,12 @@
 
 namespace xd { namespace detail { namespace text_formatter {
 
+	template< typename Iter1, typename Iter2 >
+	bool safe_equal(Iter1 begin1, Iter1 end1, Iter2 begin2, Iter2 end2)
+	{
+		return end2 - begin2 >= end1 - begin1 && std::equal(begin1, end1, begin2);
+	}
+
 	// formatted text list
 	typedef std::list<formatted_text> formatted_text_list;
 
@@ -208,6 +214,11 @@ namespace xd { namespace detail { namespace text_formatter {
 			letter_spacing.level = 0;
 			letter_spacings.push_back(letter_spacing);
 
+			nested_force_autohint force_autohint;
+			force_autohint.value = initial_state.force_autohint();
+			force_autohint.level = 0;
+			force_autohints.push_back(force_autohint);
+
 			if (initial_state.has_type()) {
 				nested_type type;
 				type.value = initial_state.type();
@@ -228,12 +239,15 @@ namespace xd { namespace detail { namespace text_formatter {
 				outline.level = 0;
 				outlines.push_back(outline);
 			}
+
+			
 		}
 
 		font_style get_font_style()
 		{
 			font_style style(colors.back().value, sizes.back().value);
 			style.letter_spacing(letter_spacings.back().value);
+			style.force_autohint(force_autohints.back().value);
 			if (alphas.size() != 0)
 				style.color().a *= alphas.back().value;
 			if (types.size() != 0)
@@ -312,6 +326,14 @@ namespace xd { namespace detail { namespace text_formatter {
 				push(letter_spacings, value, level);
 		}
 
+		void push_force_autohint(bool value, int level)
+		{
+			if (force_autohints.size() != 0)
+				push(force_autohints, value, level);
+			else
+				push(force_autohints, value, level);
+		}
+
 		template <typename T>
 		void pop(std::list<T>& list, int level)
 		{
@@ -360,6 +382,11 @@ namespace xd { namespace detail { namespace text_formatter {
 			pop(letter_spacings, level);
 		}
 
+		void pop_force_autohint(int level)
+		{
+			pop(force_autohints, level);
+		}
+
 		template <typename T>
 		void pop_level(std::list<T>& list, int level)
 		{
@@ -382,6 +409,7 @@ namespace xd { namespace detail { namespace text_formatter {
 			pop_level(outlines, level);
 			pop_level(positions, level);
 			pop_level(letter_spacings, level);
+			pop_level(force_autohints, level);
 		}
 
 		std::list<nested_color> colors;
@@ -392,6 +420,7 @@ namespace xd { namespace detail { namespace text_formatter {
 		std::list<nested_outline> outlines;
 		std::list<nested_position> positions;
 		std::list<nested_letter_spacing> letter_spacings;
+		std::list<nested_force_autohint> force_autohints;
 	};
 
 
@@ -443,6 +472,11 @@ namespace xd { namespace detail { namespace text_formatter {
 			m_style_stack.push_letter_spacing(state_change.value, state_change.level);
 		}
 
+		void operator()(const state_change_push_force_autohint& state_change)
+		{
+			m_style_stack.push_force_autohint(state_change.value, state_change.level);
+		}
+
 		void operator()(const state_change_pop_color& state_change)
 		{
 			m_style_stack.pop_color(state_change.level);
@@ -481,6 +515,11 @@ namespace xd { namespace detail { namespace text_formatter {
 		void operator()(const state_change_pop_letter_spacing& state_change)
 		{
 			m_style_stack.pop_letter_spacing(state_change.level);
+		}
+
+		void operator()(const state_change_pop_force_autohint& state_change)
+		{
+			m_style_stack.pop_force_autohint(state_change.level);
 		}
 
 	private:
@@ -595,6 +634,14 @@ void xd::text_decorator::push_letter_spacing(float value)
 	m_current_state_changes.push_back(state_change);
 }
 
+void xd::text_decorator::push_force_autohint(bool value)
+{
+	detail::text_formatter::state_change_push_force_autohint state_change;
+	state_change.value = value;
+	state_change.level = m_current_level;
+	m_current_state_changes.push_back(state_change);
+}
+
 void xd::text_decorator::pop_color()
 {
 	detail::text_formatter::state_change_pop_color state_change;
@@ -647,6 +694,13 @@ void xd::text_decorator::pop_position()
 void xd::text_decorator::pop_letter_spacing()
 {
 	detail::text_formatter::state_change_pop_letter_spacing state_change;
+	state_change.level = m_current_level;
+	m_current_state_changes.push_back(state_change);
+}
+
+void xd::text_decorator::pop_force_autohint()
+{
+	detail::text_formatter::state_change_pop_force_autohint state_change;
 	state_change.level = m_current_level;
 	m_current_state_changes.push_back(state_change);
 }
@@ -843,7 +897,7 @@ void xd::text_formatter::parse(const std::string& text, detail::text_formatter::
 	std::string::const_iterator start = text.begin(), end = text.end();
 	while (start != end) {
 		// check if we have an opening decorator delimiter
-		if (std::equal(m_decorator_open_delim.begin(), m_decorator_open_delim.end(), start)) {
+		if (detail::text_formatter::safe_equal(m_decorator_open_delim.begin(), m_decorator_open_delim.end(), start, end)) {
 			// push current text node
 			if (current_text.length() != 0) {
 				detail::text_formatter::token_text tok;
@@ -858,7 +912,7 @@ void xd::text_formatter::parse(const std::string& text, detail::text_formatter::
 
 			// check is this opening or closing tag
 			bool open_decorator;
-			if (std::equal(m_decorator_terminate_delim.begin(), m_decorator_terminate_delim.end(), start)) {
+			if (detail::text_formatter::safe_equal(m_decorator_terminate_delim.begin(), m_decorator_terminate_delim.end(), start, end)) {
 				// closing tag
 				//start += m_decorator_terminate_delim.length();
 				utf8::advance(start, utf8::distance(m_decorator_terminate_delim.begin(), m_decorator_terminate_delim.end()), end);
@@ -870,7 +924,7 @@ void xd::text_formatter::parse(const std::string& text, detail::text_formatter::
 			// get the decorator name
 			std::string decorator_name;
 			while (start != end && (*start != '=' || !open_decorator)
-				&& !std::equal(m_decorator_close_delim.begin(), m_decorator_close_delim.end(), start))
+				&& !detail::text_formatter::safe_equal(m_decorator_close_delim.begin(), m_decorator_close_delim.end(), start, end))
 			{
 				//decorator_name += *start;
 				//++start;
@@ -885,7 +939,7 @@ void xd::text_formatter::parse(const std::string& text, detail::text_formatter::
 
 				// parse arguments
 				std::string arg;
-				while (start != end && !std::equal(m_decorator_close_delim.begin(), m_decorator_close_delim.end(), start)) {
+				while (start != end && !detail::text_formatter::safe_equal(m_decorator_close_delim.begin(), m_decorator_close_delim.end(), start, end)) {
 					if (*start == ',') {
 						// push and reset the argument
 						args.m_args.push_back(arg);
@@ -951,7 +1005,7 @@ void xd::text_formatter::parse(const std::string& text, detail::text_formatter::
 		}
 
 		// check if we have an opening variable delimiter
-		if (std::equal(m_variable_open_delim.begin(), m_variable_open_delim.end(), start)) {
+		if (detail::text_formatter::safe_equal(m_variable_open_delim.begin(), m_variable_open_delim.end(), start, end)) {
 			// push current text node
 			if (current_text.length() != 0) {
 				detail::text_formatter::token_text tok;
@@ -966,7 +1020,7 @@ void xd::text_formatter::parse(const std::string& text, detail::text_formatter::
 
 			// get the tag name
 			std::string variable_name;
-			while (start != end && !std::equal(m_variable_close_delim.begin(), m_variable_close_delim.end(), start)) {
+			while (start != end && !detail::text_formatter::safe_equal(m_variable_close_delim.begin(), m_variable_close_delim.end(), start, end)) {
 				//variable_name += *start;
 				//++start;
 				utf8::append(utf8::next(start, end), std::back_inserter(variable_name));

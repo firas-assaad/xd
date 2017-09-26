@@ -48,6 +48,7 @@ namespace xd { namespace detail { namespace text_formatter {
 	typedef nested_value<font_outline> nested_outline;
 	typedef nested_value<glm::vec2> nested_position;
 	typedef nested_value<float> nested_letter_spacing;
+	typedef nested_value<bool> nested_force_autohint;
 	typedef nested_value<void> nested_void;
 
 	// state changes
@@ -59,6 +60,7 @@ namespace xd { namespace detail { namespace text_formatter {
 	struct state_change_push_outline : nested_outline {};
 	struct state_change_push_position : nested_position {};
 	struct state_change_push_letter_spacing : nested_letter_spacing {};
+	struct state_change_push_force_autohint : nested_force_autohint {};
 	struct state_change_pop_color : nested_void {};
 	struct state_change_pop_alpha : nested_void {};
 	struct state_change_pop_size : nested_void {};
@@ -67,6 +69,7 @@ namespace xd { namespace detail { namespace text_formatter {
 	struct state_change_pop_outline : nested_void {};
 	struct state_change_pop_position : nested_void {};
 	struct state_change_pop_letter_spacing : nested_void {};
+	struct state_change_pop_force_autohint : nested_void {};
 
 	// variant state change
 	typedef boost::variant<
@@ -78,6 +81,7 @@ namespace xd { namespace detail { namespace text_formatter {
 		state_change_push_outline,
 		state_change_push_position,
 		state_change_push_letter_spacing,
+		state_change_push_force_autohint,
 		state_change_pop_color,
 		state_change_pop_alpha,
 		state_change_pop_size,
@@ -85,7 +89,8 @@ namespace xd { namespace detail { namespace text_formatter {
 		state_change_pop_shadow,
 		state_change_pop_outline,
 		state_change_pop_position,
-		state_change_pop_letter_spacing
+		state_change_pop_letter_spacing,
+		state_change_pop_force_autohint
 	> state_change;
 
 	// token list
