@@ -4,7 +4,14 @@
 #include <xd/types.hpp>
 #include <xd/lua/config.hpp>
 #include <xd/lua/function.hpp>
-#include <lua.hpp>
+#ifndef LUABIND_CPLUSPLUS_LUA
+extern "C"
+{
+#endif
+#include <lua.h>
+#ifndef LUABIND_CPLUSPLUS_LUA
+}
+#endif
 #include <luabind/luabind.hpp>
 #include <boost/optional.hpp>
 

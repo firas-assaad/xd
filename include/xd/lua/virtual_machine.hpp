@@ -5,7 +5,14 @@
 #include <xd/lua/config.hpp>
 #include <xd/lua/types.hpp>
 #include <xd/lua/exceptions.hpp>
-#include <lua.hpp>
+#ifndef LUABIND_CPLUSPLUS_LUA
+extern "C"
+{
+#endif
+#include <lua.h>
+#ifndef LUABIND_CPLUSPLUS_LUA
+}
+#endif
 #include <luabind/luabind.hpp>
 #include <luabind/operator.hpp>
 #include <boost/noncopyable.hpp>

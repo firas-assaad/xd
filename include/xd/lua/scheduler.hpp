@@ -12,7 +12,14 @@
 #include <boost/config.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/ref.hpp>
-#include <lua.hpp>
+#ifndef LUABIND_CPLUSPLUS_LUA
+extern "C"
+{
+#endif
+#include <lua.h>
+#ifndef LUABIND_CPLUSPLUS_LUA
+}
+#endif
 #include <luabind/tag_function.hpp>
 #include <list>
 #include <type_traits>

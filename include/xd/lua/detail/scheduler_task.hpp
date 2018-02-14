@@ -2,7 +2,14 @@
 #define H_XD_LUA_DETAIL_SCHEDULER_TASK
 
 #include <boost/any.hpp>
-#include <lua.hpp>
+#ifndef LUABIND_CPLUSPLUS_LUA
+extern "C"
+{
+#endif
+#include <lua.h>
+#ifndef LUABIND_CPLUSPLUS_LUA
+}
+#endif
 #include <luabind/luabind.hpp>
 
 namespace xd { namespace lua { namespace detail {

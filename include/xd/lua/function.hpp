@@ -3,7 +3,14 @@
 
 #include <xd/config.hpp>
 #include <xd/lua/config.hpp>
-#include <lua.hpp>
+#ifndef LUABIND_CPLUSPLUS_LUA
+extern "C"
+{
+#endif
+#include <lua.h>
+#ifndef LUABIND_CPLUSPLUS_LUA
+}
+#endif
 #include <luabind/luabind.hpp>
 #include <boost/config.hpp>
 #include <boost/optional.hpp>

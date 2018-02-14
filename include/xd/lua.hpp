@@ -9,7 +9,16 @@
 #include <xd/lua/virtual_machine.hpp>
 #include <xd/lua/scheduler.hpp>
 
-#include <lua.hpp>
+#ifndef LUABIND_CPLUSPLUS_LUA
+extern "C"
+{
+#endif
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
+#ifndef LUABIND_CPLUSPLUS_LUA
+}
+#endif
 #include <luabind/luabind.hpp>
 
 #endif

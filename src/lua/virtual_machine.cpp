@@ -4,7 +4,6 @@
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 #include <boost/optional.hpp>
-#include <lua.hpp>
 #include <luabind/operator.hpp>
 #include <fstream>
 
