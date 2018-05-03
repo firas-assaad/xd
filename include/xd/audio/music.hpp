@@ -44,6 +44,8 @@ namespace xd
 		bool get_looping() const;
 		std::pair<unsigned int, unsigned int> get_loop_points() const;
 
+        std::string get_filename() const;
+
 	private:
 		detail::music_handle *m_handle;
 	};

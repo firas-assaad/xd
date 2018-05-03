@@ -5,14 +5,12 @@
 #include <memory>
 
 namespace xd { namespace detail {
-	
 	struct music_handle
 	{
 		xd::sound sound;
 		music_handle(const std::string& filename, unsigned int flags)
 			: sound(filename, flags) {}
 	};
-
 } }
 
 xd::music::music(const std::string& filename, unsigned int flags)
@@ -107,4 +105,8 @@ bool xd::music::get_looping() const
 std::pair<unsigned int, unsigned int> xd::music::get_loop_points() const
 {
 	return m_handle->sound.get_loop_points();
+}
+
+std::string xd::music::get_filename() const {
+    return m_handle->sound.get_filename();
 }

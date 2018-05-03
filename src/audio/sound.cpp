@@ -7,11 +7,11 @@
 #include <memory>
 
 namespace xd { namespace detail {
-	
 	struct sound_handle
 	{
 		FMOD::Sound* sound;
 		FMOD::Channel* channel;
+        std::string filename;
 		sound_handle() : sound(nullptr), channel(nullptr) {}
 		int get_loop_tag(const char* name) {
 			if (!sound)
@@ -46,7 +46,7 @@ xd::sound::sound(const std::string& filename, unsigned int flags)
 	// load sound from file
 	flags = flags ? flags : FMOD_LOOP_OFF | FMOD_2D;
 	auto handle = std::unique_ptr<detail::sound_handle>(new detail::sound_handle);
-	auto result = audio_handle->system->createSound(filename.c_str(), 
+	auto result = audio_handle->system->createSound(filename.c_str(),
 		flags, nullptr,  &handle->sound);
 	if (result != FMOD_OK)
 		throw audio_file_load_failed(filename);
@@ -55,6 +55,7 @@ xd::sound::sound(const std::string& filename, unsigned int flags)
 		throw audio_file_load_failed(filename);
 	// all ok, release the memory to the real handle
 	m_handle = handle.release();
+    m_handle->filename = filename;
 	// Set loop points if specified in tags
 	if (flags & FMOD_LOOP_NORMAL) {
 		int loop_start = m_handle->get_loop_tag("LOOPSTART");
@@ -180,4 +181,8 @@ std::pair<unsigned int, unsigned int> xd::sound::get_loop_points() const
 	unsigned int start, end;
 	m_handle->sound->getLoopPoints(&start, detail::time_unit, &end, detail::time_unit);
 	return std::make_pair(start, end);
+}
+
+std::string xd::sound::get_filename() const {
+    return m_handle->filename;
 }
