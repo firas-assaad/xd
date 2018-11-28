@@ -14,7 +14,7 @@ namespace xd
 	{
 	public:
 		text_renderer();
-		text_renderer(shader_program::ptr shader);
+		explicit text_renderer(shader_program::ptr shader);
 		virtual ~text_renderer();
 
 		void render(xd::font::ptr font, const xd::font_style& style, const mat4& mvp, const std::string& text);

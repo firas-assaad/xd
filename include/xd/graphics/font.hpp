@@ -57,6 +57,8 @@ namespace xd
 		void set_pos_uniform(const std::string&);
 		void set_color_uniform(const std::string&);
 		void set_texture_uniform(const std::string&);
+
+        std::string filename() const { return m_filename; }
 	private:
 		struct int_pair_hash {
 			std::size_t operator () (const std::pair<int, int> &p) const {
