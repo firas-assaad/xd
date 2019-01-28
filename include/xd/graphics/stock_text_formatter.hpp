@@ -37,6 +37,7 @@ namespace xd
 		void spacing_decorator(text_decorator& decorator, const formatted_text& text, const text_decorator_args& args);
 		void rainbow_decorator(text_decorator& decorator, const formatted_text& text, const text_decorator_args& args);
 		void typewriter_decorator(text_decorator& decorator, const formatted_text& text, const text_decorator_args& args);
+		void shake_decorator(text_decorator& decorator, const formatted_text& text, const text_decorator_args& args);
 
 		color_map_t m_colors;
 		typewriter_timer_map_t m_typewriter_timers;
