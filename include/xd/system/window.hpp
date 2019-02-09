@@ -45,6 +45,7 @@ namespace xd
 		int height() const;
 		int framebuffer_width() const;
 		int framebuffer_height() const;
+		void set_size(int width, int height);
 
 		// ticks stuff
 		int ticks() const;

@@ -33,7 +33,7 @@ xd::window::window(const std::string& title, int width, int height, const window
 	if (glfwInit() == GL_FALSE) {
 		throw xd::window_creation_failed();
 	}
-	
+
 	glfwWindowHint(GLFW_RESIZABLE, options.allow_resize);
 	glfwWindowHint(GLFW_SAMPLES, options.antialiasing_level);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, options.major_version);
@@ -43,7 +43,7 @@ xd::window::window(const std::string& title, int width, int height, const window
 
 	m_window = glfwCreateWindow(m_width, m_height, title.c_str(),
 			options.fullscreen ? glfwGetPrimaryMonitor() : NULL, NULL);
-	
+
 	if (!m_window)
 	{
 		glfwTerminate();
@@ -240,6 +240,11 @@ int xd::window::framebuffer_height() const
 	int height;
 	glfwGetFramebufferSize(m_window, nullptr, &height);
 	return height;
+}
+
+void xd::window::set_size(int width, int height)
+{
+	glfwSetWindowSize(m_window, width, height);
 }
 
 int xd::window::ticks() const

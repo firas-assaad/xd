@@ -10,8 +10,7 @@ namespace xd { namespace detail {
 
 xd::simple_text_renderer::simple_text_renderer(float width, float height)
 {
-	// setup an orthographic projection where 0 = top and height = bottom
-	m_projection = ortho(0.0f, width, 0.0f, height, -100.0f, 100.0f);
+	reset_projection(width, height);
 	// check if the default shader is not already loaded
 	if (!detail::text_renderer_shader)
 		detail::text_renderer_shader.reset(new text_shader);
@@ -21,12 +20,16 @@ xd::simple_text_renderer::simple_text_renderer(float width, float height)
 xd::simple_text_renderer::simple_text_renderer(float width, float height, xd::shader_program::ptr shader)
 	: m_shader(shader)
 {
-	// setup an orthographic projection where 0 = top and height = bottom
-	m_projection = ortho(0.0f, width, 0.0f, height, -100.0f, 100.0f);
+	reset_projection(width, height);
 }
 
 xd::simple_text_renderer::~simple_text_renderer()
 {
+}
+
+// setup an orthographic projection where 0 = top and height = bottom
+void xd::simple_text_renderer::reset_projection(float width, float height) {
+	m_projection = ortho(0.0f, width, 0.0f, height, -100.0f, 100.0f);
 }
 
 void xd::simple_text_renderer::render(xd::font::ptr font, const xd::font_style& style, float x, float y, const std::string& text)
