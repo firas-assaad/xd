@@ -1,6 +1,5 @@
 #include <xd/graphics/stock_text_formatter.hpp>
 #include <functional>
-#include <random>
 
 xd::stock_text_formatter::stock_text_formatter()
 {
@@ -29,7 +28,6 @@ xd::stock_text_formatter::stock_text_formatter()
 	register_decorator("spacing", std::bind(&stock_text_formatter::spacing_decorator, this, _1, _2, _3));
 	register_decorator("rainbow", std::bind(&stock_text_formatter::rainbow_decorator, this, _1, _2, _3));
 	register_decorator("typewriter", std::bind(&stock_text_formatter::typewriter_decorator, this, _1, _2, _3));
-	register_decorator("shake", std::bind(&stock_text_formatter::shake_decorator, this, _1, _2, _3));
 }
 
 xd::stock_text_formatter::~stock_text_formatter()
@@ -210,25 +208,5 @@ void xd::stock_text_formatter::typewriter_decorator(text_decorator& decorator, c
 		if ((elapsed*speed) < ++index)
 			break;
 		decorator.push_text(*i);
-	}
-}
-
-void xd::stock_text_formatter::shake_decorator(text_decorator& decorator, const formatted_text& text, const text_decorator_args& args)
-{
-	static std::mt19937 engine;
-	static std::uniform_int_distribution<int> displacement(-1, 1);
-	static std::uniform_int_distribution<int> shake_chance(1, 100);
-
-	auto power = 100 - args.get<int>(0, 0);
-	auto shake = shake_chance(engine) > power;
-
-	for (formatted_text::const_iterator i = text.begin(); i != text.end(); ++i) {
-		if (shake) {
-			decorator.push_position(glm::ivec2(displacement(engine), displacement(engine)));
-			decorator.push_text(*i);
-			decorator.pop_position();
-		} else {
-			decorator.push_text(*i);
-		}
 	}
 }
