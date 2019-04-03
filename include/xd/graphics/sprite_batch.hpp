@@ -33,9 +33,15 @@ namespace xd
 
 		void draw(const xd::mat4& mvp_matrix, const batch_list& batches, int ticks = 0);
 		void draw(const mat4& matrix, int ticks = 0);
-		
-		void set_scale(float scale);
-		float get_scale() const;
+		void draw(xd::shader_program& shader, const xd::mat4& mvp_matrix, const batch_list& batches, int ticks);
+		void draw(xd::shader_program& shader, const mat4& matrix, int ticks);
+		void draw_outlined(const xd::mat4& mvp_matrix, const batch_list& batches, int ticks = 0);
+		void draw_outlined(const mat4& matrix, int ticks = 0);
+
+		void set_scale(float scale) { m_scale = scale; }
+		float get_scale() const { return m_scale; }
+		void set_outline_color(vec4 outline_color) { m_outline_color = outline_color; }
+		vec4 get_outline_color() const { return m_outline_color; }
 
 		void set_shader(shader_program* shader);
 
@@ -57,6 +63,7 @@ namespace xd
 	private:
 		detail::sprite_batch_data *m_data;
 		float m_scale;
+		vec4 m_outline_color;
 	};
 }
 

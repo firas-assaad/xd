@@ -24,7 +24,10 @@ namespace xd { namespace detail {
 	{
 		std::deque<sprite> sprites;
 		std::unique_ptr<xd::shader_program> shader;
-		sprite_batch_data() : shader(new xd::sprite_shader) {}
+		std::unique_ptr<xd::shader_program> outline_shader;
+		sprite_batch_data() :
+			shader(new xd::sprite_shader),
+			outline_shader(new xd::sprite_outline_shader) {}
 	};
 
 } }
@@ -32,6 +35,7 @@ namespace xd { namespace detail {
 xd::sprite_batch::sprite_batch()
 	: m_data(new detail::sprite_batch_data)
 	, m_scale(1)
+	, m_outline_color(1.0, 1.0, 0.0, 1.0)
 {
 }
 
@@ -93,45 +97,67 @@ xd::sprite_batch::batch_list xd::sprite_batch::create_batches()
 		batches.push_back(batch);
 
 	}
-	
+
 	return batches;
 }
-
 void xd::sprite_batch::draw(const xd::mat4& mvp_matrix, const xd::sprite_batch::batch_list& batches, int ticks)
+{
+	draw(*m_data->shader, mvp_matrix, batches, ticks);
+}
+
+void xd::sprite_batch::draw(const xd::mat4& mvp_matrix, int ticks)
+{
+	draw(*m_data->shader, mvp_matrix, ticks);
+}
+
+void xd::sprite_batch::draw_outlined(const xd::mat4& mvp_matrix, const xd::sprite_batch::batch_list& batches, int ticks)
+{
+	draw(*m_data->shader, mvp_matrix, batches, ticks);
+	draw(*m_data->outline_shader, mvp_matrix, batches, ticks);
+}
+
+void xd::sprite_batch::draw_outlined(const xd::mat4& mvp_matrix, int ticks)
+{
+	draw(*m_data->shader, mvp_matrix, ticks);
+	draw(*m_data->outline_shader, mvp_matrix, ticks);
+}
+
+void xd::sprite_batch::draw(xd::shader_program& shader, const xd::mat4& mvp_matrix, const xd::sprite_batch::batch_list& batches, int ticks)
 {
 	assert(m_data->sprites.size() == batches.size());
 	// setup the shader
-	m_data->shader->use();
-	m_data->shader->bind_uniform("mvpMatrix", mvp_matrix);
-	m_data->shader->bind_uniform("ticks", ticks);
+	shader.use();
+	shader.bind_uniform("mvpMatrix", mvp_matrix);
+	shader.bind_uniform("ticks", ticks);
 
 	// iterate through all sprites
 	for (unsigned int i = 0; i < m_data->sprites.size(); ++i) {
 		auto& sprite = m_data->sprites[i];
 		auto& batch = batches[i];
 		// give required params to shader
-		m_data->shader->bind_uniform("vPosition", vec4(sprite.x, sprite.y, sprite.depth, 0));
-		m_data->shader->bind_uniform("vColor", sprite.color);
-		m_data->shader->bind_uniform("vColorKey", sprite.tex->color_key());
+		shader.bind_uniform("vPosition", vec4(sprite.x, sprite.y, sprite.depth, 0));
+		shader.bind_uniform("vColor", sprite.color);
+		shader.bind_uniform("vColorKey", sprite.tex->color_key());
 
 		// bind the texture
 		sprite.tex->bind(GL_TEXTURE0);
-		m_data->shader->bind_uniform("vTexSize", vec2(sprite.tex->width(), sprite.tex->height()));
-		
+		shader.bind_uniform("vTexSize", vec2(sprite.tex->width(), sprite.tex->height()));
+
 		// draw it
 		batch->render();
 	}
 }
 
-void xd::sprite_batch::draw(const xd::mat4& mvp_matrix, int ticks)
+void xd::sprite_batch::draw(xd::shader_program& shader, const xd::mat4& mvp_matrix, int ticks)
 {
 	// create a vertex batch for sending vertex data
 	vertex_batch<detail::sprite_vertex_traits> batch(GL_QUADS);
 
 	// setup the shader
-	m_data->shader->use();
-	m_data->shader->bind_uniform("mvpMatrix", mvp_matrix);
-	m_data->shader->bind_uniform("ticks", ticks);
+	shader.use();
+	shader.bind_uniform("mvpMatrix", mvp_matrix);
+	shader.bind_uniform("ticks", ticks);
+	shader.bind_uniform("vOutlineColor", m_outline_color);
 
 	// create a quad for rendering sprites
 	detail::sprite_vertex quad[4];
@@ -172,29 +198,19 @@ void xd::sprite_batch::draw(const xd::mat4& mvp_matrix, int ticks)
 
 		// load the quad
 		batch.load(&quad[0], 4);
-		
+
 		// give required params to shader
-		m_data->shader->bind_uniform("vPosition", vec4(i->x, i->y, i->depth, 0));
-		m_data->shader->bind_uniform("vColor", i->color);
-		m_data->shader->bind_uniform("vColorKey", i->tex->color_key());
+		shader.bind_uniform("vPosition", vec4(i->x, i->y, i->depth, 0));
+		shader.bind_uniform("vColor", i->color);
+		shader.bind_uniform("vColorKey", i->tex->color_key());
 
 		// bind the texture
 		i->tex->bind(GL_TEXTURE0);
-		m_data->shader->bind_uniform("vTexSize", vec2(i->tex->width(), i->tex->height()));
-		
+		shader.bind_uniform("vTexSize", vec2(i->tex->width(), i->tex->height()));
+
 		// draw it
 		batch.render();
 	}
-}
-
-void xd::sprite_batch::set_scale(float scale)
-{
-	m_scale = scale;
-}
-
-float xd::sprite_batch::get_scale() const
-{
-	return m_scale;
 }
 
 void xd::sprite_batch::set_shader(shader_program* shader) {

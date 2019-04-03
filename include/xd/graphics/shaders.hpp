@@ -45,6 +45,12 @@ namespace xd
 	public:
 		sprite_shader();
 	};
+
+	class XD_API sprite_outline_shader : public shader_program
+	{
+	public:
+		sprite_outline_shader();
+	};
 }
 
 #endif
