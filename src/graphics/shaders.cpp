@@ -88,7 +88,7 @@ xd::texture_shader::texture_shader()
 		"varying vec2 vVaryingTexCoords;"
 		"void main(void)"
 		"{"
-		"	gl_FragColor = texture2D(colorMap, vVaryingTexCoords.st);"
+		"	gl_FragColor = texture2D(colorMap, vVaryingTexCoords);"
 		"}";
 
 	attach(GL_VERTEX_SHADER, vertex_shader_src);
@@ -127,8 +127,8 @@ xd::texture_mask_shader::texture_mask_shader()
 		"varying vec2 vVaryingTexCoords;"
 		"void main(void)"
 		"{"
-		"	gl_FragColor = texture2D(colorMap, vVaryingTexCoords.st);"
-		"	gl_FragColor.a = texture2D(maskMap, vVaryingTexCoords.st).r;"
+		"	gl_FragColor = texture2D(colorMap, vVaryingTexCoords);"
+		"	gl_FragColor.a = texture2D(maskMap, vVaryingTexCoords).r;"
 		"}";
 
 	attach(GL_VERTEX_SHADER, vertex_shader_src);
@@ -171,7 +171,7 @@ xd::text_shader::text_shader()
 		"void main(void)"
 		"{"
 		"	gl_FragColor.rgb = vColor.rgb;"
-		"	gl_FragColor.a = vColor.a * texture2D(colorMap, vVaryingTexCoords.st).r;"
+		"	gl_FragColor.a = vColor.a * texture2D(colorMap, vVaryingTexCoords).r;"
 		"}";
 
 	attach(GL_VERTEX_SHADER, vertex_shader_src);
@@ -204,7 +204,7 @@ xd::sprite_shader::sprite_shader()
 		"varying vec2 vVaryingTexCoords;"
 		"void main(void)"
 		"{"
-		"	vec4 vTexColor = texture2D(colorMap, vVaryingTexCoords.st);"
+		"	vec4 vTexColor = texture2D(colorMap, vVaryingTexCoords);"
 		"	if (vColorKey.a > 0.0 && vTexColor == vColorKey) vTexColor.a = 0.0;"
 		"	gl_FragColor = vColor * vTexColor;"
 		"}";
@@ -242,11 +242,11 @@ xd::sprite_outline_shader::sprite_outline_shader()
 		"void main(void)"
 		"{"
 		"	vec2 stepSize = 1.0 / vTexSize;"
-		"	float alpha = 4.0 * (vColorKey.a > 0.0 && texture2D(colorMap, vVaryingTexCoords.st) == vColorKey ? 0.0 : 1.0);"
-		"	alpha -= vColorKey.a > 0.0 && texture2D( colorMap, vVaryingTexCoords + vec2(stepSize.x, 0.0)) == vColorKey ? 0.0 : 1.0;"
-		"	alpha -= vColorKey.a > 0.0 && texture2D( colorMap, vVaryingTexCoords + vec2(-stepSize.x, 0.0)) == vColorKey ? 0.0 : 1.0;"
-		"	alpha -= vColorKey.a > 0.0 && texture2D( colorMap, vVaryingTexCoords + vec2(0.0, stepSize.y)) == vColorKey ? 0.0 : 1.0;"
-		"	alpha -= vColorKey.a > 0.0 && texture2D( colorMap, vVaryingTexCoords + vec2(0.0, -stepSize.y)) == vColorKey ? 0.0 : 1.0;"
+		"	float alpha = 4.0 * (vColorKey.a > 0.0 && texture2D(colorMap, vVaryingTexCoords) == vColorKey ? 0.0 : 1.0);"
+		"	alpha -= vColorKey.a > 0.0 && texture2D(colorMap, vVaryingTexCoords + vec2(stepSize.x, 0.0)) == vColorKey ? 0.0 : 1.0;"
+		"	alpha -= vColorKey.a > 0.0 && texture2D(colorMap, vVaryingTexCoords + vec2(-stepSize.x, 0.0)) == vColorKey ? 0.0 : 1.0;"
+		"	alpha -= vColorKey.a > 0.0 && texture2D(colorMap, vVaryingTexCoords + vec2(0.0, stepSize.y)) == vColorKey ? 0.0 : 1.0;"
+		"	alpha -= vColorKey.a > 0.0 && texture2D(colorMap, vVaryingTexCoords + vec2(0.0, -stepSize.y)) == vColorKey ? 0.0 : 1.0;"
 		"	gl_FragColor = vec4(vOutlineColor.rgb, alpha > 0.0 ? vOutlineColor.a : 0.0);"
 		"}";
 

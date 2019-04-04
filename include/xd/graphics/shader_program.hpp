@@ -8,6 +8,7 @@
 #include <boost/intrusive_ptr.hpp>
 #include <boost/noncopyable.hpp>
 #include <string>
+#include <unordered_map>
 
 #pragma warning(disable: 4275)
 
@@ -48,6 +49,7 @@ namespace xd
 	protected:
 		// shader program and attrib list
 		GLuint m_program;
+		std::unordered_map<std::string, GLint> m_uniform_map;
 	};
 }
 

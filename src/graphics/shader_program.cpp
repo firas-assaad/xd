@@ -121,6 +121,8 @@ void xd::shader_program::bind_uniform(const std::string& name, const glm::mat4& 
 
 GLint xd::shader_program::get_uniform_location(const std::string& name)
 {
-	GLint location = glGetUniformLocation(m_program, name.c_str());
-	return location;
+	if (m_uniform_map.find(name) == m_uniform_map.end())
+		m_uniform_map[name] = glGetUniformLocation(m_program, name.c_str());
+
+	return m_uniform_map[name];
 }
